@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head>
+<meta charset="UTF-8">
+<title>流程列表</title>
+<script type="text/javascript" src="../../js/importJs.js"></script>
+
+<script type="text/javascript">
+	var myApp = angular.module("myApp", ['base','mobileDirective']);
+	myApp.controller("myRequestCtrl",['$scope','baseService','$sce', function($scope,baseService,$sce) {
+	    
+	    $scope.showStatus = 'all'
+ 		
+	    /* $scope.changeStatus = function(status){
+ 			$scope.showStatus = status;
+ 		   	if(status != "all"){
+			   	var query = {property: "status_", value: status, operation: "EQUAL", relation: "AND"}
+	 			$scope.setQueryParams([query]);
+ 		   	}else{
+ 		   		$scope.setQueryParams([]);
+ 		   	}
+ 		    $scope.loadData();
+	    } */
+	    
+	    $scope.jumpToProcess = function(item){
+	    	window.location.href=__ctx + "/mobile/view/bpm/startFlow.html?defId="+item.id;
+	    }
+	}]);
+	
+	function reload(){
+		window.location.reload(false)
+	}
+</script>
+
+</head>
+<body ng-controller="myRequestCtrl" ht-list-load="items" url="${bpmRunTime}/runtime/instance/v1/myMobileProcess" when-scrolled="bottomToLoadMore()" class="pbd">
+	<!-- <div class="taskHeader ">
+		<span class="title_left" ht-back></span>
+		<span class="title" onClick="reload()">我的请求</span>
+		<span class="title_right"></span>
+	</div> -->
+	<div>
+		<div class="taskSearch" ht-search="name_,def_key_">
+		</div>
+		<div class="jg10"></div>
+		<div class="task_box">
+			<div class="task_list clearfix" ng-repeat="item in items.rows" ng-click="jumpToProcess(item)"  >
+				<div class="flow_list_title">
+					<em class="flow_list_icon"></em>
+				</div>
+				<div class="task_list_word">
+					<p class="task_list_name">{{item.name}}</p>
+					<div class="task_list_time">{{item.defKey}}</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>

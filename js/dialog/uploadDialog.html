@@ -1,0 +1,115 @@
+
+<html ng-app="base">
+<head>
+	<title>系统附件上传</title>
+	<meta charset="UTF-8">
+	<script src="../importJs.js"></script>
+	<script type="text/javascript">
+
+	
+	importJs(["/mobile/js/angular-file-upload.js",
+         	 "/mobile/js/dialog/uplaodDialogController.js"]);
+</script>
+<style type="text/css">
+.list-block .item-text{
+	height: 1.1rem;
+}
+</style>
+</head>
+<body ng-controller="uploadCtrl" class="page">
+		<div class="pop_box_01">
+		<div class="popHeader">
+			<span class="poptitle">文件上传</span>
+			<span class="poptitle_btn"><label class="Hadd_btn" class="Hadd_real_btn" for="popfile002">添加</label><input nv-file-select id="popfile002" multiple uploader="uploader" type="file" class="Hadd_real_btn" /></span>
+			<span class="poptitle_close" ng-click="closeDialog()"></span>
+		</div>
+		
+		<div class="Cfile_list_box">
+			<ul>
+				<li class="Cfile_list clearfix" ng-repeat="item in uploader.queue">
+					<img src="../../img/upload_else.png" alt="" class="Cfile_list_img" />
+					<div class="Cfile_list_cont">
+						<p class="file_title">{{item.file.name}}</p>
+						<div class="progress_bg" style="width:{{item.progress}}%"><b class="progress_now" style="width: 100%;"></b></div>
+						<div class="file_w"><span class="file_size">{{item.file.size/1024/1024|number:2}}MB</span><em class="file_progress">{{item.progress}}%</em></div>
+					</div>
+					<em class="Cfile_list_delet" ng-click="item.remove()"></em>
+				</li>
+				<!-- <li class="Cfile_list clearfix">
+					<img src="../../img/upload_pdf.png" alt="" class="Cfile_list_img" />
+					<div class="Cfile_list_cont">
+						<p class="file_title">公司新闻.doc</p>
+						<div class="progress_bg"><b class="progress_now" style="width: 100%;"></b></div>
+						<div class="file_w"><span class="file_size">0.52MB</span><em class="file_progress">100%</em></div>
+					</div>
+					<em class="Cfile_list_delet"></em>
+				</li>
+				<li class="Cfile_list clearfix">
+					<img src="img/upload_ppt.png" alt="" class="Cfile_list_img" />
+					<div class="Cfile_list_cont">
+						<p class="file_title">某某公司简介.ppt</p>
+						<div class="progress_bg"><b class="progress_now" style="width: 30%;"></b></div>
+						<div class="file_w"><span class="file_size">0.52MB</span><em class="file_progress">30%</em></div>
+					</div>
+					<em class="Cfile_list_close"></em>
+				</li>
+				<li class="Cfile_list clearfix">
+					<img src="img/upload_img.png" alt="" class="Cfile_list_img" />
+					<div class="Cfile_list_cont">
+						<p class="file_title">公司新闻配图.jpg</p>
+						<div class="progress_bg"><b class="progress_now" style="width: 40%;"></b></div>
+						<div class="file_w"><span class="file_size">0.52MB</span><em class="file_progress">40%</em></div>
+					</div>
+					<em class="Cfile_list_close"></em>
+				</li>
+				<li class="Cfile_list clearfix">
+					<img src="img/upload_video.png" alt="" class="Cfile_list_img" />
+					<div class="Cfile_list_cont">
+						<p class="file_title">新年晚会视频.mp4</p>
+						<div class="progress_bg"><b class="progress_now"></b></div>
+						<div class="file_w"><span class="file_size">0.52MB</span><em class="file_progress">0%</em></div>
+					</div>
+					<em class="Cfile_list_close"></em>
+				</li>
+				<li class="Cfile_list clearfix">
+					<img src="img/upload_else.png" alt="" class="Cfile_list_img" />
+					<div class="Cfile_list_cont">
+						<p class="file_title">其他所有格式.txt</p>
+						<div class="progress_bg"><b class="progress_now"></b></div>
+						<div class="file_w"><span class="file_size">0.52MB</span><em class="file_progress">0%</em></div>
+					</div>
+					<em class="Cfile_list_close"></em>
+				</li>
+				<li class="Cfile_list clearfix">
+					<img src="img/upload_else.png" alt="" class="Cfile_list_img" />
+					<div class="Cfile_list_cont">
+						<p class="file_title">其他所有格式.java</p>
+						<div class="progress_bg"><b class="progress_now" style="width: 100%;"></b></div>
+						<div class="file_w"><span class="file_size">0.52MB</span><em class="file_progress">100%</em></div>
+					</div>
+					<em class="Cfile_list_delet"></em>
+				</li>
+				<li class="Cfile_list clearfix">
+					<img src="img/upload_else.png" alt="" class="Cfile_list_img" />
+					<div class="Cfile_list_cont">
+						<p class="file_title">其他所有格式.jsp</p>
+						<div class="progress_bg"><b class="progress_now"></b></div>
+						<div class="file_w"><span class="file_size">0.52MB</span><em class="file_progress">0%</em></div>
+					</div>
+					<em class="Cfile_list_close"></em>
+				</li>
+				<li class="Cfile_list clearfix">
+					<img src="img/upload_else.png" alt="" class="Cfile_list_img" />
+					<div class="Cfile_list_cont">
+						<p class="file_title">其他所有格式.jsp</p>
+						<div class="progress_bg"><b class="progress_now"></b></div>
+						<div class="file_w"><span class="file_size">0.52MB</span><em class="file_progress">0%</em></div>
+					</div>
+					<em class="Cfile_list_close"></em>
+				</li> -->
+			</ul>
+		</div>
+		<div class="botm_btn"><p class="sure_btn" ng-click="dialogOk()">确定</p></div>
+	</div>
+</body>
+</html>

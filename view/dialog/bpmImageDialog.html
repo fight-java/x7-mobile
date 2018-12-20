@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html ng-app="imageDialog" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
+<title>选择组织</title>
+<script src="../../js/importJs.js"></script>
+<script type="text/javascript">
+
+	var myApp = angular.module("imageDialog", ['base','mobileDirective']);
+	myApp.controller("imageDialogCtrl",['$scope', function($scope) {
+ 		
+		if(dialogConf.taskId){
+			$("#bpmImage").attr("src",__ctx+"/bpm/bpmImage?taskId="+dialogConf.taskId);
+		}
+   		$scope.closeDialog =function(){
+	    	dialogConf.closeDialog();
+		}
+	}]);
+</script>
+</head>
+<body ng-controller="imageDialogCtrl">
+
+	<div class="pop_box_01 page " when-scrolled="bottomToLoadMore()">
+		<div class="popHeader">
+			<span class="poptitle">流程图</span>
+			<span class="poptitle_close" ng-click="closeDialog()"></span>
+		</div>
+		<iframe id="bpmImage" style="width:100%;height:100%;border:0px"></iframe>
+	</div>
+</body>
+</html>

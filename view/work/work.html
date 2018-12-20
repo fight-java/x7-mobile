@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" ng-app="myApp">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
+<title>工作台</title>
+<script src="../../js/importJs.js"></script>
+
+<script type="text/javascript">
+var myApp = angular.module("myApp", ['base','mobileDirective']);
+myApp.controller("myWrokCtrl",['$scope','baseService','$sce','$compile', function(scope,baseService,$sce,$compile) {
+	
+	scope.works  = [];
+	baseService.get(getContext().portal+"/sys/sysMenu/v1/getCurrentUserMenu?menuType=2").then(function(data){
+		if(data && data.state){
+			for(var i = 0 ; i < data.value.length ; i++){
+				var work = data.value[i];
+				var item = {
+			    		name:work.name,
+			    		works:[]
+				    }
+				for(var j = 0 ; j < work.children.length ; j++){
+					var child = work.children[j]
+					item.works.push({
+			   			icon:child.menuIcon,
+			   			title:child.name,
+			   			url:__ctx+child.menuUrl
+			   		})
+				}
+			   	scope.works.push(item);
+			}
+		}
+	})
+	scope.toIndex = function(){
+		window.location.href=__ctx+"/mobile/index.html";
+	}
+	scope.jumpTo = function(item){
+		window.location.href=item.url;
+	}
+}]);
+</script>
+</head>
+<body ng-controller="myWrokCtrl" class="theFootPad page">
+	<div ng-repeat="work in works">
+		<div class="work_box">
+			<p class="work_linkTit">{{work.name}}</p>
+			<div class="clearfix">
+				<a ng-click="jumpTo(item)" ng-repeat="item in work.works" class="work_link_cell">
+					<em class="{{item.icon}}"></em>
+					<span class="work_link_text">{{item.title}}</span>
+				</a>
+			</div>
+		</div>
+		<div class="jg10"></div>
+	</div>
+	<div class="web_foot clearfix">
+		<div class="web_foot_cell" style="width:50%" ng-click="toIndex()">
+			<span class="iconfont foot_cell_icon">&#xe64e;</span>
+			<span class="foot_cell_word">首页</span>
+		</div>
+		<div class="web_foot_cell current" style="width:50%">
+			<span class="iconfont foot_cell_icon">&#xe68e;</span>
+			<span class="foot_cell_word">工作台</span>
+		</div>
+	</div>
+</body>
+</html>

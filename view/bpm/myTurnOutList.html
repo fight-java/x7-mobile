@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html ng-app="myApp" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
+<title>转办代理</title>
+<script type="text/javascript" src="../../js/importJs.js"></script>
+
+
+<script type="text/javascript">
+	var myApp = angular.module("myApp", ['base','mobileDirective']);
+	myApp.controller("myTaskTurnCtrl",['$scope','baseService','$sce', function($scope,baseService,$sce) {
+		
+    	$scope.changeStatus = function(status){
+			$scope.showStatus = status;
+		   	if(status == "agent"){
+		   		var query = {property: "turn_type_", value: "agent", operation: "EQUAL", relation: "AND"}
+				$scope.setQueryParams([query]);
+		   	}else{
+		   		var query = {property: "turn_type_", value: "turn", operation: "EQUAL", relation: "AND"}
+				$scope.setQueryParams([query]);
+		   	}
+			$scope.resetPageBean();
+		    $scope.loadData();
+	    }
+		
+		$scope.jumpToProcess = function(procInstId){
+			window.location.href=__ctx + "/mobile/view/bpm/getProcessRun.html?proInstId="+procInstId;
+		}
+		
+		$scope.$on("list:done",function(event,data){
+			$scope.changeStatus("agent")
+		});
+	}]);
+</script>
+
+</head>
+<body ng-controller="myTaskTurnCtrl" ht-list-load="items" url="${bpmRunTime}/runtime/task/v1/getMobileDelegate" no-init="true" when-scrolled class="pbd">
+	<!-- <div class="taskHeader">
+		<span class="title_left" ht-back></span>
+		<span class="title">转办代理</span>
+		<span class="title_right"></span>
+	</div> -->
+	<div class="taskSearch" ht-search="subject_">
+	</div>
+	<div class="task_changeTab clearfix">
+		<div class="task_tabCell_2" ng-class="{'current':showStatus == 'agent'}" ng-click="changeStatus('agent')">代理</div>
+		<div class="task_tabCell_2" ng-class="{'current':showStatus == 'turn'}" ng-click="changeStatus('turn')">转办</div>
+	</div>
+	<div class="jg10"></div>
+	
+	<div  ng-if="showStatus=='turn'" class="task_box">
+		<div class="task_list clearfix" ng-if="item.turnType=='turn'" ng-click="jumpToProcess(item.procInstId)"  ng-repeat="item in items.rows">
+			<div  ng-if="item.status=='running'"  class="task_state">
+				<em class="task_ongoing"></em>
+				<p class="task_ongoing_word">进行</p>
+			</div>
+			<div ng-if="item.status=='finish' " class="task_state">
+				<em class="task_over"></em>
+				<p class="task_over_word">完成</p>
+			</div>
+			<div class="task_list_word">
+				<p class="task_list_name">{{item.taskSubject}}</p>
+				<p class="task_list_name">{{item.assigneeName}}-{{item.createTime  |date:'yyyy-MM-dd HH:mm:ss'}}</p>
+				<div class="task_list_time">节点:{{item.taskName}}</div>
+			</div>
+		</div>
+	</div>
+	
+	<div  ng-if="showStatus=='agent'" class="task_box">
+		<div class="task_list clearfix" ng-if="item.turnType=='agent'" ng-click="jumpToProcess(item.procInstId)" ng-repeat="item in items.rows">
+			<div  ng-if="item.status=='running'"  class="task_state">
+				<em class="task_ongoing"></em>
+				<p class="task_ongoing_word">进行</p>
+			</div>
+			<div ng-if="item.status=='finish' " class="task_state">
+				<em class="task_over"></em>
+				<p class="task_over_word">完成</p>
+			</div>
+			<div class="task_list_word">
+				<p class="task_list_name">{{item.taskSubject}}</p>
+				<p class="task_list_name">{{item.assigneeName}}-{{item.createTime  |date:'yyyy-MM-dd HH:mm:ss'}}</p>
+				<div class="task_list_time">节点:{{item.taskName}}</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

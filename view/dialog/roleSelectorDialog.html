@@ -1,0 +1,237 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html ng-app="orgDialog" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
+<title>选择角色</title>
+<script src="../../js/importJs.js"></script>
+<script type="text/javascript">
+
+	var myApp = angular.module("orgDialog", ['base','mobileDirective','arrayToolService']);
+	myApp.controller("orgDialogCtrl",['$scope','baseService','$sce','ArrayToolService', function($scope,baseService,$sce,ArrayToolService) {
+ 		
+   		$scope.isSingle = dialogConf.isSingle ? dialogConf.isSingle : false;
+		//$scope.isSingle = true;
+	   	
+	   	$scope.dialog = {}
+	   	
+		$scope.roleList = [];
+	   	
+	   	$scope.selectRoleLength = 0;
+	   	
+	   	$scope.isShowSelectDetail = false;
+	   	
+	   	$scope.selectRoles = [];
+	   	
+	   	$scope.requestParams = {
+   			dialog_alias_:dialogConf.alias,
+   			_search:false,
+   			pageSize:20,
+   			page:1
+	   	}
+	   	
+	   	$scope.initData=function(){
+	   		$.showIndicator();
+	    	var url = __ctx+"/form/customDialog/getByAlias?alias="+dialogConf.alias;
+	    	baseService.postForm(url,{}).then(function(data){
+	    		$scope.dialog = data;
+	    		$scope.displayfield = JSON.parse(data.displayfield);
+	    		$scope.mainDisplayField = angular.uppercase($scope.displayfield[0].field);
+	    		$scope.aliasDisplayField = angular.uppercase($scope.displayfield[1].field);
+	    		$scope.loadRole();
+            	$.hideIndicator();
+			},function(){
+				$.hideIndicator();
+			}); 
+	   	}
+	   	
+	   	$scope.loadRole=function(){
+	   		$.showIndicator();
+	    	var url = __ctx+"/form/customDialog/getListData";
+	    	baseService.postForm(url,$scope.requestParams).then(function(data){
+	    		$scope.roleList = $scope.roleList.concat(data.rows);
+	    		$scope.total = data.total;
+	    		$scope.isAllRoleSelect = false;
+	    		$scope.roleList.map(function(role){
+	    			var index = $scope.findIndex($scope.selectRoles,role);
+	    			if(index != -1){
+	    				role.isSelect = true;
+	    			}
+	    		})
+            	$.hideIndicator();
+			},function(){
+				$.hideIndicator();
+			}); 
+	   	}
+	   	
+	   	$scope.closeDialog =function(){
+	    	dialogConf.closeDialog();
+		}
+	   	
+	   	$scope.clearSearch = function(){
+	   		if($scope.searchText){
+	   			$scope.searchText = "";
+		    	$scope.changeSearch();
+	   		}
+	    }
+	   	
+		$scope.selectRole = function(role){
+			role.isSelect = !role.isSelect
+	   		if(!$scope.isSingle){
+	   			$scope.renderSelectRole(role);
+	   		}else{
+	   			if(role.isSelect){
+	   				if($scope.selectRoles.length > 0){
+	   					var index = $scope.findIndex($scope.roleList,$scope.selectRoles[0]);
+	   					if(index != -1){
+	   						$scope.roleList[index].isSelect = false;
+	   					}
+	   					$scope.selectRoles.pop();
+	   				}
+	   				$scope.selectRoles.push(role);
+	   			}
+	   		}
+		}
+		
+	   	$scope.selectAllRole = function(){
+	   		$scope.isAllRoleSelect = !$scope.isAllRoleSelect;
+	   		$scope.roleList.map(function(role){
+	   			role.isSelect = $scope.isAllRoleSelect;
+	   			$scope.renderSelectRole(role);
+	   		})
+	   	}
+	   	
+	   	
+	   	$scope.renderSelectRole = function(role){
+	   		var index = $scope.findIndex($scope.selectRoles,role);
+	   		if(index == -1){
+	   			if(role.isSelect){
+	   				$scope.selectRoles.push(role);
+	   			}
+	   		}else{
+	   			if(!role.isSelect){
+	   				ArrayToolService.del(index,$scope.selectRoles);
+	   			}
+	   		}
+	   	}
+	   	
+		$scope.bottomToLoadMore = function(){
+			if($scope.requestParams.page < $scope.total){
+				$scope.requestParams.page++;
+				if($scope.searchText){
+					$scope.renderSearchParam();
+				}
+				$scope.loadRole();
+			}
+	   	}
+		
+		$scope.findIndex = function(arr,object){
+	   		for (var i = 0; i < arr.length; i++) {
+				var thisData =arr[i];
+				var curentOneIsSame =true;
+				for(var key in object){
+					if("$$hashKey,isSelect".indexOf(key)!= -1)continue;//排除掉一些常用变量
+					if(thisData[key] && object[key] && thisData[key] != object[key]){
+						curentOneIsSame = false; 
+						break;
+					}
+				}
+				if(curentOneIsSame) return i;
+			}
+			return -1;
+	   	}
+		
+		$scope.renderSearchParam = function(){
+			var json = JSON.parse($scope.dialog.conditionfield);
+			json.map(function(con){
+				$scope.requestParams['Q^'+con.field] = $scope.searchText;
+			})
+		}
+		
+		$scope.changeSearch = function(){
+			$scope.requestParams.page = 1;
+			$scope.renderSearchParam();
+			$scope.roleList = [];
+			$scope.loadRole();
+		}
+		
+		$scope.showSelectDetail = function(){
+	    	$scope.isShowSelectDetail = true;
+	    }
+	    
+	    $scope.closeShowSelectDetail = function(){
+	    	$scope.isShowSelectDetail = false;
+	    }
+	    
+	    $scope.remove = function(role){
+	    	$scope.isAllRoleSelect = false;
+	    	var index = $scope.findIndex($scope.selectRoles,role);
+	    	if(index != -1){
+	    		ArrayToolService.del(index,$scope.selectRoles);
+	    	}
+	    	var index = $scope.findIndex($scope.roleList,role);
+	    	if(index != -1){
+	    		$scope.roleList[index].isSelect = false;
+	    	}
+	    }
+	    
+	    $scope.completeSelect = function(){
+	    	var returnJson = [];
+	    	var resultfield = JSON.parse($scope.dialog.resultfield)
+	    	for(var i=0,d;d=$scope.selectRoles[i++];){
+    			var tempData={};
+    			for (var j = 0,field;field=resultfield[j++];){
+    				tempData[field.comment]=d[angular.uppercase(field.field)];
+    			}
+    			returnJson.push(tempData);
+    		}
+	    	dialogConf.closeDialog();
+    		dialogConf.callBack(returnJson);
+	    }
+	   	
+	   	$scope.initData();
+	}]);
+</script>
+</head>
+<body ng-controller="orgDialogCtrl">
+
+	<div class="pop_box_01 page " when-scrolled="bottomToLoadMore()">
+		<div class="popHeader">
+			<span class="poptitle">选择角色</span>
+			<span class="poptitle_close" ng-click="closeDialog()"></span>
+		</div>
+		<div class="taskSearch">
+			<div class="taskSearchIn"><input ng-model="searchText" ng-change="changeSearch()" class="taskSearchIpt" type="text" placeholder="搜索" /><em ng-if="searchText" ng-click="clearSearch()" class="clearSearch"></em></div>
+		</div> 
+		<div class="selector_box">
+			<div class="selec_all" ng-class="{'selec_in':isAllRoleSelect == true}" ng-click="selectAllRole()" ng-if="isSingle == false">全选</div>
+			<ul>
+				<li class="selector_list clearfix" ng-repeat="role in roleList">
+					<div class="multi_options" ng-class="{'selec_in':role.isSelect == true}" ng-click="selectRole(role)">
+						<div class="selector_name">{{role[mainDisplayField]}}</div>
+						<p class="selector_account">别名：{{role[aliasDisplayField]}}</p>
+					</div>
+				</li>
+			</ul>
+		</div>
+		<div ng-if="isSingle == true" class="selector_have"><a href="##" class="selector_have_num">已选择：{{selectRoles[0][mainDisplayField]}}</a><span ng-click="completeSelect()" class="selector_have_btn">确定</span></div>
+		<div ng-if="isSingle == false" class="selector_have"><a ng-click="showSelectDetail()" href="##" class="selector_have_num">已选择：{{selectRoles.length}}个角色</a><span ng-click="completeSelect()" class="selector_have_btn">确定</span></div>
+	</div>
+	
+	<div ng-if="isShowSelectDetail == true"  class="pop_box_01">
+		<div class="popHeader">
+			<span class="poptitle">已选{{selectRoles.length}}个角色</span>
+			<span class="poptitle_close" ng-click="closeShowSelectDetail()"></span>
+		</div>
+		
+		<div class="selector_box">
+			<div class="selected_Blist clearfix" ng-repeat="role in selectRoles">
+				<div class="selected_Bname02">{{role[mainDisplayField]}}</div>
+				<em class="selected_Bcancel02" ng-click="remove(role)"></em>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html ng-app="approveFlow">
+<head>
+<meta charset="UTF-8">
+<title>任务审批</title>
+<script src="../../js/importJs.js"></script>
+<script type="text/javascript">
+
+flowAryJs.push("/mobile/js/bpm/approveFlowController.js")
+var FORM_TYPE_ = 'mobile';
+importCss(flowAryCss);
+importJs(flowAryJs);
+function reload(){
+	window.location.reload(true);
+}
+</script>
+<style type="text/css">
+.content-block{
+    padding:0px 0px 0px 0px;
+	margin:  0rem 0 2rem 0;
+}
+
+</style>
+</head>
+<body ng-controller="taskCtrl">
+<div class="b-gray pbd page" id="page-modal" style="overflow: auto">
+	<!-- <div class="taskHeader">
+		<span class="title_left" ht-back></span>
+		<span class="title" onClick="reload()">任务审批</span>
+	</div> -->
+	<div class="formDetail_box Fpd50" >
+		<div class="Dtitle_01">审批历史</div>
+		<a href="##" class="history_link clearfix" ng-click="showOpinion()">
+			<div ng-if="lastOpinion" ht-opinion-status="lastOpinion">
+			</div>
+			<div class="Hcontent" ng-if="lastOpinion.auditorName">
+				<div class="history_name" ng-if="lastOpinion.auditorName">最后执行人：{{lastOpinion.auditorName}}</div>
+				<div class="history_name" ng-if="!lastOpinion.auditorName">候选人：{{lastOpinion.qualfiedNames}}</div>
+				<div class="history_time">{{lastOpinion.completeTime|date:'yyyy-MM-dd HH:mm:ss'}}</div>
+				<div class="history_opinion">审批意见：{{lastOpinion.opinion}}</div>
+			</div>
+			<div class="Hcontent" ng-if="!lastOpinion.auditorName">
+				<div class="history_name">候选人待处理：{{lastOpinion.qualfiedNames}}</div>
+				<div class="history_time">{{lastOpinion.createTime|date:'yyyy-MM-dd HH:mm:ss'}}</div>
+				<div class="history_opinion">审批意见：{{lastOpinion.opinion}}</div>
+			</div>
+		</a>
+		<div class="content-block" ht-bind-html="form.formHtml"></div>
+		<!-- 
+			开始节点选择执行人暂时关闭
+			<div class="formItem" ng-if="prop && prop.firstNodeUserAssign">
+			<div class="content-block-title">设置执行人</div>
+			<div  ng-repeat="node in nodeUsers">
+				<div style="width: 100%; height:32px;">
+				<div class="itemTitle" ng-bind="node.nodeName"></div>
+				<div class="iteminput">
+					<span>
+						<div style="text-align:left;" class="row">	
+							<span class="col-50 ng-scope" style="word-break:normal; width:auto; display:block; white-space:normal;word-wrap : break-word ;overflow: hidden ;" ng-repeat="executor in node.executors track by $index">	
+							           <span class="button ng-binding" style="margin: 4px 0;padding:0 7px" title="移除该项" ng-click="removeTo(executor,node.executors)">{{executor.name}}<span class="fa fa-close"></span>
+							</span>						 </span>
+							<span class="col-50">
+								<a style="margin-top:10px;" class="fa fa-search" ng-click="selectUser(node)">选择</a>
+							</span>
+						</div>
+					</span>
+				</div>
+				</div>
+			</div>
+		</div> -->
+	</div>
+	<div class="formBotm_btn">
+		<table cellpadding="0" cellspacing="0">
+			<tr>
+				<td ng-repeat="button in buttons" align="center" valign="middle">
+					<div ng-click="approveFlow('reject','驳回')" ng-if="button.alias == 'reject'">
+						<span class="form_reject"></span>
+						<p class="formBotm_w01">驳回</p>
+					</div>
+					<div ng-click="approveFlow('agree','同意')" ng-if="button.alias == 'agree'">
+						<span class=form_agree></span>
+						<p class="formBotm_w02">同意</p>
+					</div>
+					<div ng-click="saveDraft()"  ng-if="button.alias == 'saveDraft'">
+						<span class="form_save" ></span>
+						<p class="formBotm_w01">保存</p>
+					</div>
+					<div ng-click="approveFlow('oppose','反对')" ng-if="button.alias == 'oppose'">
+						<span class="form_reject"></span>
+						<p class="formBotm_w02">反对</p>
+					</div>
+					<div ng-click="approveFlow('abandon','弃权')" ng-if="button.alias == 'abandon'">
+						<span class="form_delet"></span>
+						<p class="formBotm_w02">弃权</p>
+					</div>
+					<div data-popover=".popover-links" class="open-popover" ng-if="button.alias == 'more'">
+						<span class="form_save"></span>
+						<p class="formBotm_w01">更多</p>
+					</div>
+				</td>
+				<!-- <td align="center" valign="middle" ng-if="isSignTask">
+					<div ng-click="approveFlow('oppose','反对')">
+						<span class="form_reject"></span>
+						<p class="formBotm_w02">反对</p>
+					</div>
+				</td>
+				<td align="center" valign="middle" ng-if="isSignTask">
+					<div ng-click="approveFlow('abandon','弃权')">
+						<span class="form_delet"></span>
+						<p class="formBotm_w02">弃权</p>
+					</div>
+				</td>
+				<td align="center" valign="middle" ng-if="!isTransStatus">
+					
+				</td>
+				
+				<td align="center" valign="middle" ng-if="isTransStatus">
+					<div  ng-click="approveFlow('opposeTrans','反对')">
+						<span class="form_reject"></span>
+						<p class="formBotm_w02">反对</p>
+					</div>
+				</td>
+				
+				<td align="center" valign="middle" ng-if="isApproveTask">
+					<div ng-click="startTrans('startTrans','协办')">
+						<span class="form_submit"></span>
+						<p class="formBotm_w02">协办</p>
+					</div>
+				</td>  -->
+				
+				<!-- <td align="center" valign="middle">
+					<div data-popover=".popover-links" class="open-popover">
+						<span class="form_save"></span>
+						<p class="formBotm_w01">更多</p>
+					</div>
+				</td> -->
+			</tr>
+		</table>
+	</div>
+	<!-- <nav class="bar bar-tab" id="">
+		同意，反对，驳回，驳回发起人，会签同意，会签弃权，会签反对，
+			<a href="#" class="tab-item active" ng-click="startFlow()">
+				<i class="fa fa-check"></i>
+				<span class="am-navbar-label">提交</span>
+			</a>
+			<a href="#" class="tab-item active" ng-click="saveDraft()">
+				<i class="fa fa-save"></i>
+				<span class="am-navbar-label">保存</span>
+			</a>
+			<a href="#" class="tab-item active" ng-click="delDraft()" ng-if="runId.length>2">
+				<i class="fa fa-trash-o"></i>
+				<span class="am-navbar-label">删除</span>
+			</a>
+			<a href="#" class="tab-item active" ng-click="showFlowPic()">
+				<i class="fa fa-photo"></i>
+				<span class="am-navbar-label">流程图</span>
+			</a>
+	</nav> -->
+</div>
+<div class="popover popover-links">
+ <div class="popover-angle"></div>
+ <div class="popover-inner">
+   <div class="list-block">
+		<div ng-repeat="button in buttons">
+			<div ng-if="button.alias == 'flowImage'" ng-click="showFlowPic()" class="list-button item-link">流程图</div>
+			<div ng-if="button.alias == 'backToStart'" ng-click="approveFlow('backToStart','驳回发起人')" class="list-button item-link">驳回发起人</div>
+		</div>
+	</div>
+		<!-- <div ng-if="fromApp == 'hotent'"><a href="#"  ng-click="communicateToStart()" class="list-button item-link">与申请人沟通</div>
+		</div> -->
+ </div>
+</body>
+</html>

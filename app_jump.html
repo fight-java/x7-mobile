@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+<title>跳转中</title>
+<meta charset="utf-8">
+<script src="./js/jquery/jquery.min.js"></script>
+<script src="./js/util/appUtil.js"></script>
+<script type="text/javascript">
+	$(function(){
+		var url = HtUtil.getParameter("jumpUrl");
+		alert(window.formApp)
+		if(url){
+			window.location.replace(url);
+		}
+	})
+</script>
+</head>
+<body  class="page b-gray">
+	<div class="content">
+	
+	</div>
+</body>
+</html>

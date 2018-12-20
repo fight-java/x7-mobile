@@ -1,0 +1,118 @@
+<!doctype html>
+<html ng-app="myApp">
+<head>
+<title>HOTENT手机平台</title>
+<meta charset="utf-8">
+<script src="./js/importJs.js"></script>
+<script type="text/javascript">
+importCss(['/mobile/css/swiper.min.css'])
+importJs(['/mobile/js/swiper/swiper.min.js'])
+importJs(parseHTMLJS);
+
+var myApp = angular.module("myApp", ['base','mobileDirective']);
+myApp.controller("myHomeCtrl",['$scope','baseService','$sce','$compile', function($scope,baseService,$sce,$compile) {
+	
+	$scope.showLayout = function(layout){
+		$scope.data = {};
+		$scope.dataFrom = {};
+		$scope.dataParams = {};
+		$scope.requestType = {};
+		var layoutObj = $(layout);
+		var aliass = "";
+		var spanEls = layoutObj.children().find("span[column-alias]");
+		if(spanEls.length<1){
+			return ;
+		}
+		$(spanEls).each(function(){
+			aliass = !aliass? $(this).attr('column-alias'):aliass+','+$(this).attr('column-alias');
+		});
+		
+		var url= getContext().portal + "/portal/sysIndexColumn/sysIndexColumn/v1/getDatasByAlias";
+		baseService.post(url,aliass).then(function(rep){
+			rep.forEach(function(curData){  
+				if(curData){
+					var curData = parseToJson(curData);
+					var curAlias = curData.model.alias;
+					//处理html
+					var html = curData.html;
+					layoutObj.children().find("span[column-alias='"+curAlias+"']").replaceWith($(html));
+					var requestType = curData.requestType ? curData.requestType : 'POST';
+					$scope.dataFrom[curAlias] = curData.dataFrom;
+					$scope.requestType[curAlias] = requestType;
+					$scope.data[curAlias] = {};
+					//post请求参数
+					var dataParams = {};
+					//get请求参数
+					var urlParam = '';
+					var dataParam = curData.dataParam;
+					if(dataParam){
+						dataParam =  parseToJson(dataParam);
+						var isMany = dataParam.length > 1;
+						for (var i = 0; i < dataParam.length; i++) {
+							var value = dataParam[i]['value'];
+							var name = dataParam[i]['name'];
+							if(requestType=='POST'){
+								try { value = parseToJson(value);} catch (e) {}
+								if(isMany){
+									dataParams[name] = value;
+								}else{
+									dataParams = value;
+								}
+							}else{
+								urlParam = i>0? urlParam + '&'+name+'='+value : '?'+name+'='+value;
+							}
+						}
+					}
+					if(curData.dataFrom){
+						$scope.dataParams[curAlias] = requestType=='POST'?dataParams:urlParam;
+    					$scope.columnReload(curAlias);
+					}
+				}
+			});
+			$scope.html = "";
+			for (var i = 0; i < layoutObj.length; i++) {
+				$scope.html += $(layoutObj[i]).html();
+			}
+		});
+	}
+	
+	$scope.loadIndexHtml = function(callback){
+		var url = getContext().portal + "/portal/main/v1/myMobileHome"
+		var def=baseService.get(url);
+		def.then(function(data){ 
+			html =  $.base64.decode(data.value,"utf-8");
+			$scope.showLayout(html);
+		},function(status){
+		});
+	}
+	
+	$scope.columnReload = function(curAlias){
+		if($scope.requestType[curAlias]=='POST'){
+			baseService.post($scope.dataFrom[curAlias],$scope.dataParams[curAlias]).then(function(result){
+				$scope.data[curAlias] = result;
+			});
+		}else{
+			baseService.get($scope.dataFrom[curAlias]+$scope.dataParams[curAlias]).then(function(result){
+				$scope.data[curAlias] = result;
+			});
+		}
+	}
+	$scope.loadIndexHtml();
+	
+	$scope.toWork = function(){
+		window.location.href=__ctx+"/mobile/view/work/work.html";
+	}
+}]);
+
+function reload(){
+	window.location.reload(true);
+}
+
+</script>
+</head>
+<body ng-controller="myHomeCtrl" class="page b-gray">
+	<div class="content">
+		<div ht-bind-html="html" over-scroll class="portal-container full-height"></div>
+	</div>
+</body>
+</html>

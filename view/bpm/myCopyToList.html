@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html ng-app="myApp" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
+<title>抄送</title>
+<script type="text/javascript" src="../../js/importJs.js"></script>
+
+<script type="text/javascript">
+	var myApp = angular.module("myApp", ['base','mobileDirective']);
+	myApp.controller("myCopyToCtrl",['$scope','baseService','$sce', function($scope,baseService,$sce) {
+	    
+		$scope.changeStatus = function(status){
+			$scope.showStatus = status;
+		   	if(status == "copyto"){
+		   		var query = {property: "type", value: "copyto", operation: "EQUAL", relation: "AND"}
+				$scope.setQueryParams([query]);
+		   	}else{
+		   		var query = {property: "type", value: "trans", operation: "EQUAL", relation: "AND"}
+				$scope.setQueryParams([query]);
+		   	}
+			$scope.resetPageBean();
+		    $scope.loadData();
+	    }
+		
+		$scope.jumpToProcess = function(procInstId){
+			window.location.href=__ctx + "/mobile/view/bpm/getProcessRun.html?proInstId="+procInstId;
+		}
+		
+		$scope.$on("list:done",function(event,data){
+			$scope.changeStatus("copyto")
+		}); 
+	}]);
+</script>
+
+</head>
+<body ng-controller="myCopyToCtrl" ht-list-load="items" url="${bpmRunTime}/runtime/instance/v1/getMobileReceiverCopyTo" no-init="true" when-scrolled class="pbd">
+	<!-- <div class="taskHeader">
+		<span class="title_left" ht-back></span>
+		<span class="title">抄送</span>
+		<span class="title_right"></span>
+	</div> -->
+	<div class="taskSearch" ht-search="subject"></div>
+	<div class="task_changeTab clearfix">
+		<div class="task_tabCell_2" ng-class="{'current':showStatus == 'copyto'}" ng-click="changeStatus('copyto')">抄送</div>
+		<div class="task_tabCell_2" ng-class="{'current':showStatus == 'trans'}" ng-click="changeStatus('trans')">转发</div>
+	</div>
+	<div class="jg10"></div>
+	<div class="task_box">
+		<div class="task_list clearfix" ng-click="jumpToProcess(item.instId)" ng-repeat="item in items.rows" >
+			<div class="task_state">
+				<em class="task_ongoing"></em>
+				<p class="task_ongoing_word">进行</p>
+			</div>
+			<div class="task_list_word">
+				<p class="task_list_name">{{item.subject}}</p>
+				<p class="task_list_name">{{item.startor}}-{{item.createTime  |date:'yyyy-MM-dd HH:mm:ss'}}</p>
+				<div class="task_list_time">{{item.createTime  |date:'yyyy-MM-dd'}}</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

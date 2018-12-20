@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html ng-app="startFlow">
+<head>
+<meta charset="UTF-8">
+<title>启动流程</title>
+<script src="../../js/importJs.js"></script>
+<script type="text/javascript">
+
+importCss(flowAryCss);
+importJs(flowAryJs);
+
+</script>
+<style type="text/css">
+.content-block{
+    padding:0px 0px 0px 0px;
+	margin:  0rem 0 2rem 0;
+}
+</style>
+</head>
+<body ng-controller="startFlowCtrl">
+<div class="b-gray pbd page" style="overflow: auto">
+	<div class="formDetail_box Fpd50" >
+		<div class="content-block" ht-bind-html="form.formHtml" id="formHtml"></div>
+	</div>
+	<div class="formBotm_btn">
+		<table cellpadding="0" cellspacing="0">
+			<tr>
+				<td align="center" valign="middle" ng-if="proInstId">
+					<div ng-click="delDraft()">
+						<span class="form_delet"></span>
+						<p class="formBotm_w01">删除</p>
+					</div>
+				</td>
+				<td align="center" valign="middle">
+					<div ng-click="saveDraft()">
+						<span class="form_save" ></span>
+						<p class="formBotm_w01">保存</p>
+					</div>
+				</td>
+				<td align="center" valign="middle">
+					<div ng-click="startFlow()">
+						<span class="form_submit"></span>
+						<p class="formBotm_w02">提交</p>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<!-- <nav class="bar bar-tab" id="">
+		同意，反对，驳回，驳回发起人，会签同意，会签弃权，会签反对，
+			<a href="#" class="tab-item active" ng-click="startFlow()">
+				<i class="fa fa-check"></i>
+				<span class="am-navbar-label">提交</span>
+			</a>
+			<a href="#" class="tab-item active" ng-click="saveDraft()">
+				<i class="fa fa-save"></i>
+				<span class="am-navbar-label">保存</span>
+			</a>
+			<a href="#" class="tab-item active" ng-click="delDraft()" ng-if="runId.length>2">
+				<i class="fa fa-trash-o"></i>
+				<span class="am-navbar-label">删除</span>
+			</a>
+			<a href="#" class="tab-item active" ng-click="showFlowPic()">
+				<i class="fa fa-photo"></i>
+				<span class="am-navbar-label">流程图</span>
+			</a>
+	</nav> -->
+
+</div>
+</body>
+</html>

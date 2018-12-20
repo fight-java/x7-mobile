@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head>
+<meta charset="UTF-8">
+<title>我的请求</title>
+<script type="text/javascript" src="../../js/importJs.js"></script>
+
+<script type="text/javascript">
+	var myApp = angular.module("myApp", ['base','mobileDirective']);
+	myApp.controller("myRequestCtrl",['$scope','baseService','$sce', function($scope,baseService,$sce) {
+	    
+	    $scope.showStatus = 'all'
+ 		
+	    $scope.changeStatus = function(status){
+ 			$scope.showStatus = status;
+ 		   	if(status == "draft"){
+ 		   		$scope.updateListLoadUrl("${bpmRunTime}/runtime/instance/v1/myMobileDraft");
+ 		   	}else{
+ 		   		$scope.updateListLoadUrl("${bpmRunTime}/runtime/instance/v1/myMobileRequest");
+ 		   	}
+ 			if(status != "all"){
+			   	var query = {property: "status_", value: status, operation: "EQUAL", relation: "AND"}
+	 			$scope.setQueryParams([query]);
+ 		   	}else{
+ 		   		$scope.setQueryParams([]);
+ 		   	}
+ 			$scope.resetPageBean();
+ 		    $scope.loadData();
+	    }
+	    
+	    $scope.jumpToProcess = function(item){
+	    	if(item.status == 'draft'){
+	    		window.location.href=__ctx + "/mobile/view/bpm/startFlow.html?proInstId="+item.id+"&defId="+item.procDefId;
+	    	}else{
+	    		window.location.href=__ctx + "/mobile/view/bpm/getProcessRun.html?proInstId="+item.id;
+	    	}
+	    }
+	}]);
+	
+	function reload(){
+		window.location.reload(false)
+	}
+</script>
+
+</head>
+<body ng-controller="myRequestCtrl" ht-list-load="items" url="${bpmRunTime}/runtime/instance/v1/myMobileRequest" when-scrolled class="pbd">
+	<!-- <div class="taskHeader ">
+		<span class="title_left" ht-back></span>
+		<span class="title" onClick="reload()">我的请求</span>
+		<span class="title_right"></span>
+	</div> -->
+	<div>
+		<div class="taskSearch" ht-search="subject_">
+		</div>
+		<div class="task_changeTab clearfix">
+			<div class="task_tabCell"  ng-class="{'current':showStatus == 'all'}" ng-click="changeStatus('all')">全部</div>
+			<div class="task_tabCell" ng-class="{'current':showStatus == 'running'}" ng-click="changeStatus('running')">进行</div>
+			<div class="task_tabCell" ng-class="{'current':showStatus == 'end'}" ng-click="changeStatus('end')">结束</div>
+			<div class="task_tabCell" ng-class="{'current':showStatus == 'draft'}" ng-click="changeStatus('draft')">草稿</div>
+		</div>
+		<div class="jg10"></div>
+		<div  ng-if="showStatus=='all'" class="task_box">
+			<div class="task_list clearfix" ng-repeat="item in items.rows" ng-click="jumpToProcess(item)"  >
+				<div  ng-if="item.status=='running'"  class="task_state">
+					<em class="task_ongoing"></em>
+					<p class="task_ongoing_word">进行</p>
+				</div>
+				<div ng-if="item.status=='end' || item.status=='manualend'" class="task_state">
+					<em class="task_over"></em>
+					<p class="task_over_word">结束</p>
+				</div>
+				<div ng-if="item.status=='revoke' || item.status=='revokeToStart'" class="task_state">
+					<em class="task_undo"></em>
+					<p class="task_undo_word">撤销</p>
+				</div>
+				<div ng-if="item.status=='backToStart' || item.status=='back'" class="task_state">
+					<em class="task_withdraw"></em>
+					<p class="task_withdraw_word">驳回</p>
+				</div>
+				<div ng-if="item.status=='draft'" class="task_state">
+					<em class="task_draft"></em>
+					<p class="task_draft_word">草稿</p>
+				</div>
+				<div class="task_list_word">
+					<p class="task_list_name">{{item.procDefName}}</p>
+					<p class="task_list_name">{{item.creator}}-{{item.createTime  |date:'yyyy-MM-dd HH:mm:ss'}}</p>
+					<div class="task_list_time">{{item.createTime  |date:'yyyy-MM-dd'}}</div>
+				</div>
+			</div>
+		</div>
+		<div ng-if="showStatus=='running'" class="task_box" >
+			<div class="task_list clearfix" ng-if="item.status=='running'" ng-repeat="item in items.rows"  ng-click="jumpToProcess(item)"  href="##">
+				<div  ng-if="item.status=='running'"  class="task_state">
+					<em class="task_ongoing"></em>
+					<p class="task_ongoing_word">进行</p>
+				</div>
+				<div class="task_list_word">
+					<p class="task_list_name">{{item.procDefName}}</p>
+					<p class="task_list_name">{{item.creator}}-{{item.createTime  |date:'yyyy-MM-dd HH:mm:ss'}}</p>
+					<div class="task_list_time">{{item.createTime  |date:'yyyy-MM-dd'}}</div>
+				</div>
+			</div>
+		</div>
+		<div  ng-if="showStatus=='end'" class="task_box">
+			<div class="task_list clearfix" ng-if="item.status=='end'" ng-repeat="item in items.rows"  ng-click="jumpToProcess(item)"  href="##">
+				<div ng-if="item.status=='end' || item.status=='manualend'" class="task_state">
+					<em class="task_over"></em>
+					<p class="task_over_word">结束</p>
+				</div>
+				<div class="task_list_word">
+					<p class="task_list_name">{{item.procDefName}}</p>
+					<p class="task_list_name">{{item.creator}}-{{item.createTime  |date:'yyyy-MM-dd HH:mm:ss'}}</p>
+					<div class="task_list_time">{{item.createTime  |date:'yyyy-MM-dd'}}</div>
+				</div>
+			</div>
+		</div>
+		<div  ng-if="showStatus=='draft'" class="task_box">
+			<div class="task_list clearfix" ng-if="item.status=='draft'" ng-repeat="item in items.rows" ng-click="jumpToProcess(item)" href="##">
+				<div ng-if="item.status=='draft'" class="task_state">
+					<em class="task_draft"></em>
+					<p class="task_draft_word">草稿</p>
+				</div>
+				<div class="task_list_word">
+					<p class="task_list_name">{{item.procDefName}}</p>
+					<p class="task_list_name">{{item.creator}}-{{item.createTime  |date:'yyyy-MM-dd HH:mm:ss'}}</p>
+					<div class="task_list_time">{{item.createTime  |date:'yyyy-MM-dd'}}</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head>
+<title>审批历史</title>
+<meta charset="utf-8">
+<script src="../../js/importJs.js"></script>
+
+<script type="text/javascript">
+
+var runId=HtUtil.getParameter("runId");
+var myApp = angular.module("myApp", ['base','mobileDirective']);
+myApp.controller("opinionListCtrl",['$scope','baseService','$sce', function(scope,baseService,$sce) {
+	
+	var url = "${bpmRunTime}/runtime/instance/v1/get?id="+ runId;
+	baseService.get(url).then(function(rep){
+		$scope.process = rep;
+	});
+	
+	baseService.get("${bpmRunTime}/runtime/instance/v1/instanceFlowOpinions?instId="+runId).then(function(data){
+		scope.dataList = data.reverse();
+	})
+}]);
+
+
+</script>
+</head>
+<body class="b-gray page" ng-controller="opinionListCtrl">
+	<!-- <div class="taskHeader">
+		<span class="title_left" ht-back></span>
+		<span class="title">审批历史</span>
+		<span class="title_right"></span>
+	</div> -->
+	<div class="pbd">
+		<div class="secondTitle">
+			<span>{{process.subject}}</span>
+		</div>
+		<div class="history_box">
+			<div ng-repeat="item in dataList">
+				<div ng-if="item.status == 'end' || item.status == 'manual_end'" class="history_list clearfix Hlast">
+					<div class="Hleft"><em class="Hnode"></em></div>
+					<div class="Hright">
+						<em class="HrightBg"></em>
+						<p class="jiedian">结束</p>
+						<div class="pdtop8 clearfix">
+							<div ht-opinion-status="item"></div>
+							<div class="Hcontent">
+								<div class="history_name">执行人：{{item.auditorName}}</div>
+								<div class="history_time">{{item.completeTime |date:'yyyy-MM-dd HH:mm:ss'}}</div>
+								<div class="history_opinion">审批意见：{{item.opinion}}</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div ng-if="item.status != 'reSubmit' && item.status != 'start' && item.status != 'end' &&  item.status != 'manual_end'"  ng-class="{'Hnew':!item.auditorName}" class="history_list clearfix">
+					<div class="Hleft"><em class="Hnode"></em></div>
+					<div class="Hright">
+						<em class="HrightBg"></em>
+						<p class="jiedian">用户任务</p>
+						<div class="pdtop8 clearfix">
+							<div ht-opinion-status="item"></div>
+							<div class="Hcontent">
+								<div class="history_name" ng-if="item.auditorName">执行人：{{item.auditorName}}</div>
+								<div class="history_name" ng-if="!item.auditorName">候选人：{{item.qualfiedNames}}</div>
+								<div class="history_time" ng-if="item.auditorName">{{item.completeTime |date:'yyyy-MM-dd HH:mm:ss'}}</div>
+								<div class="history_time" ng-if="!item.auditorName">{{item.createTime|date:'yyyy-MM-dd HH:mm:ss'}}</div>
+								<div class="history_opinion">审批意见：{{item.opinion}}</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div ng-if="item.status == 'reSubmit' || item.status == 'start'" class="history_list clearfix Hfirst">
+					<div class="Hleft"><em class="Hnode"></em></div>
+					<div class="Hright">
+						<em class="HrightBg"></em>
+						<p class="jiedian">开始节点</p>
+						<div class="pdtop8 clearfix">
+							<div ht-opinion-status="item"></div>
+							<div class="Hcontent">
+								<div class="history_name">执行人：{{item.auditorName}}</div>
+								<div class="history_time">{{item.completeTime |date:'yyyy-MM-dd HH:mm:ss'}}</div>
+								<div class="history_opinion">审批意见：{{item.opinion}}</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+	</div>
+</body>
+</html>

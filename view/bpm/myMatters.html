@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html ng-app="myApp" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
+<title>我的审批</title>
+<script type="text/javascript" src="../../js/importJs.js"></script>
+
+<script type="text/javascript">
+
+	var myApp = angular.module("myApp", ['base','mobileDirective']);
+	myApp.controller("myWaitMattersCtrl",['$scope','baseService','$sce', function($scope,baseService,$sce) {
+	   
+		$scope.showStatus = 'wait'
+	    
+    	$scope.changeStatus = function(status){
+			$scope.showStatus = status;
+		   	if(status == "done"){
+		   		$scope.updateListLoadUrl("${bpmRunTime}/runtime/instance/v1/getMobileDoneList");
+		   	}else{
+		   		$scope.updateListLoadUrl("${bpmRunTime}/runtime/task/v1/getMobileTodoList");
+		   	}
+			$scope.resetPageBean();
+		    $scope.loadData();
+	    }
+		
+		$scope.getTask = function(taskId,defId,procInstId){
+			window.location.href=__ctx + "/mobile/view/bpm/task.html?proInstId="+procInstId+"&taskId="+taskId+"&defId="+defId;
+		}
+		
+		$scope.getProcessRun = function(procInstId){
+			window.location.href=__ctx + "/mobile/view/bpm/getProcessRun.html?proInstId="+procInstId;
+		}
+	}]);
+</script>
+</head>
+
+<body ng-controller="myWaitMattersCtrl" ht-list-load="items" url="${bpmRunTime}/runtime/task/v1/getMobileTodoList" when-scrolled class="">
+	<div class="taskSearch" ht-search="subject_,proc_def_name_"></div>
+	
+	<div class="task_changeTab clearfix">
+		<div class="task_tabCell_2"  ng-class="{'current':showStatus == 'wait'}" ng-click="changeStatus('wait')">待办</div>
+		<div class="task_tabCell_2" ng-class="{'current':showStatus == 'done'}" ng-click="changeStatus('done')">已办</div>
+	</div>
+	
+	<div class="jg10"></div>
+	
+	<div ng-if="showStatus=='wait'" class="task_box">
+		<div class="task_list clearfix" ng-repeat="item in items.rows" ng-click="getTask(item.id,item.procDefId,item.procInstId)">
+			<div class="task_state">
+				<em class="task_ongoing"></em>
+				<p class="task_ongoing_word">进行</p>
+			</div>
+			<div class="task_list_word">
+				<p class="task_list_name">{{item.procDefName}}</p>
+				<p class="task_list_name">{{item.creator}}-{{item.createTime  |date:'yyyy-MM-dd HH:mm:ss'}}</p>
+				<div class="task_list_time">{{item.createTime  |countDate}}</div>
+			</div>
+		</div>
+	</div>
+	
+	<div ng-if="showStatus=='done'" class="task_box">
+		<div class="task_list clearfix" ng-repeat="item in items.rows" ng-click="getProcessRun(item.id)">
+			<div  ng-if="item.status=='running'"  class="task_state">
+				<em class="task_ongoing"></em>
+				<p class="task_ongoing_word">进行</p>
+			</div>
+			<div ng-if="item.status=='end' || item.status=='manualend'" class="task_state">
+				<em class="task_over"></em>
+				<p class="task_over_word">结束</p>
+			</div>
+			<div ng-if="item.status=='revoke' || item.status=='revokeToStart'" class="task_state">
+				<em class="task_over"></em>
+				<p class="task_over_word">撤销</p>
+			</div>
+			<div ng-if="item.status=='backToStart' || item.status=='back'" class="task_state">
+				<em class="task_withdraw"></em>
+				<p class="task_withdraw_word">驳回</p>
+			</div>
+			<div class="task_list_word">
+				<p class="task_list_name">{{item.procDefName}}-{{item.taskName}}</p>
+				<p class="task_list_name">{{item.creator}}-{{item.createTime  |date:'yyyy-MM-dd HH:mm:ss'}}</p>
+				<div class="task_list_time"  ng-if="item.status !='end' && item.status !='manualend'" >节点:{{item.taskName}}</div>
+				<div class="task_list_time"  ng-if="item.status =='end' || item.status =='manualend'" >持续时间:{{item.duration  |timeLag}}</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

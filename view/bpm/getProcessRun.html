@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html ng-app="processInfoApp">
+<head>
+<meta charset="UTF-8">
+<title>表单明细</title>
+<script src="../../js/importJs.js"></script>
+<script type="text/javascript">
+var FORM_TYPE_ = 'mobile';
+importCss(flowAryCss);
+importJs(flowInstAryJs);
+
+function reload(){
+	window.location.reload(true)
+}
+
+
+</script>
+</head>
+<body ng-controller="processInfoCtrl" class="b-gray pbd page">
+	<!-- <div class="taskHeader">
+		<span class="title_left" ht-back></span>
+		<span class="title" onClick="reload()">表单明细</span>
+		<span class="title_right"></span>
+	</div> -->
+	<div class="secondTitle">
+		<span>{{process.subject}}</span>
+	</div>
+	<div class="formDetail_box">
+		<div class="Dtitle_01">审批历史</div>
+		<a href="##" class="history_link clearfix" ng-click="showOpinion()">
+			<div ng-if="lastOpinion" ht-opinion-status="lastOpinion">
+			</div>
+			<div class="Hcontent" ng-if="lastOpinion.auditorName">
+				<div class="history_name" ng-if="lastOpinion.auditorName">最后执行人：{{lastOpinion.auditorName}}</div>
+				<div class="history_name" ng-if="!lastOpinion.auditorName">候选人：{{lastOpinion.qualfiedNames}}</div>
+				<div class="history_time">{{lastOpinion.completeTime|date:'yyyy-MM-dd HH:mm:ss'}}</div>
+				<div class="history_opinion">审批意见：{{lastOpinion.opinion}}</div>
+			</div>
+			<div class="Hcontent" ng-if="!lastOpinion.auditorName">
+				<div class="history_name">候选人待处理：{{lastOpinion.qualfiedNames}}</div>
+				<div class="history_time">{{lastOpinion.createTime|date:'yyyy-MM-dd HH:mm:ss'}}</div>
+				<div class="history_opinion">审批意见：{{lastOpinion.opinion}}</div>
+			</div>
+		</a>
+		<div id="formHtml" ht-bind-html="form.formHtml"></div>
+		<!-- <div class="Dtitle_03 clearfix"><span class="Tword">子表标题</span><a href="##" class="more">查看更多</a></div>
+		<div class="child_box">
+			<table cellpadding="0" cellspacing="1" bgcolor="#dedede">
+				<tr height="35" bgcolor="#edecec" class="child_t">
+					<td align="center" valign="middle">dfhsdhdfdfh</td>
+					<td align="center" valign="middle">dfhsdhdfdfh</td>
+					<td align="center" valign="middle">dfhsdhdfdfh</td>
+					<td align="center" valign="middle">dfhsdhdfdfh</td>
+				</tr>
+				<tr height="35" bgcolor="#fff" class="child_b">
+					<td align="center" valign="middle">sdsdgdfdhedshdfjhdfhf</td>
+					<td align="center" valign="middle">sdsdgdfdhefjhdfhf</td>
+					<td align="center" valign="middle">sdsdgdfdhedshdfjhdfhfdfhdx</td>
+					<td align="center" valign="middle">gdfdhedshdfjhdfhf</td>
+				</tr>
+			</table>
+		</div>
+		<div class="Dtitle_03 clearfix"><span class="Tword">子表标题</span><a href="##" class="more">查看更多</a></div>
+		<div class="child_box">
+			<table width="" cellpadding="0" cellspacing="1" bgcolor="#dedede">
+				<tr height="35" bgcolor="#edecec" class="child_t">
+					<td align="center" valign="middle">标题</td>
+					<td align="center" valign="middle">姓名</td>
+					<td align="center" valign="middle">信息</td>
+					<td align="center" valign="middle">挂号费</td>
+				</tr>
+				<tr height="35" bgcolor="#fff" class="child_b">
+					<td align="center" valign="middle">豆腐干公司打工是吧</td>
+					<td align="center" valign="middle">豆腐干公司</td>
+					<td align="center" valign="middle">豆腐干</td>
+					<td align="center" valign="middle">符合地方的发挥</td>
+				</tr>
+			</table>
+		</div>
+ -->
+	</div>
+</body>
+</html>

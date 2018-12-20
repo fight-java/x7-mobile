@@ -1,0 +1,100 @@
+<!doctype html>
+<html ng-app="myApp">
+<head>
+<title>HOTENT手机平台</title>
+<meta charset="utf-8">
+<script src="../../js/importJs.js"></script><script type="text/javascript">
+
+importCss(flowAryCss);
+importJs(flowAryJs);
+
+var myApp = angular.module("myApp", ['base','mobileDirective','formDirective']);
+myApp.controller("previewDesignCtrl",['$scope','baseService','$rootScope', function($scope,baseService,$rootScope) {
+	$scope.showItem = 'pageHtml';
+	$scope.loadForm = function(){
+		var url= "${form}/form/form/v1/previewDesign";
+		baseService.post(url,window.parent.__previewPageParam).then(function(rep){
+			$scope.formHtml= rep.bpmForm.formHtml;
+			$scope.data = rep.data;
+			$scope.permission = rep.permission;
+		});
+	}
+	$scope.showOrHide = function(item){
+		$scope.showItem = item;
+	}
+	
+	$scope.add = function(path){
+		var arr = path.split(".");
+		if(arr.length<2)alert("subtable path is error!")
+		var subTableName = arr[1].replace("sub_","")
+		var tempData = $scope.data[arr[0]].initData[subTableName];
+		
+		if(!tempData)tempData={};
+		var ary = eval("$scope.data." + path); 
+		if(!angular.isArray(ary)) ary = [];
+		
+		ary.push(angular.copy(tempData));
+		eval("$scope.data." + path+"=ary");
+		!$rootScope.$$phase && $rootScope.$digest();
+	};
+	
+	$scope.remove = function(path,index){
+		var ary = eval("($scope.data." + path + ")");
+		if(ary&&ary.length>0){
+			ary.splice(index,1);
+		}
+	};
+	
+	$scope.initSubTableData = function(){
+		var initSubTable = [];
+		var data = $scope.data;
+		$("[type='subGroup'][initdata]").each(function(i,item){
+			initSubTable.push($(item).attr("tablename"));
+		});
+		
+		for(var i=0,subTable;subTable=initSubTable[i++];){
+			for(var boCode in $scope.data){
+				var initData =data[boCode].initData[subTable];
+				if(initData &&(!data[boCode]["sub_"+subTable]||data[boCode]["sub_"+subTable].length==0)){
+					data[boCode]["sub_"+subTable] = [];
+					data[boCode]["sub_"+subTable].push($.extend({},initData));
+				}
+			}
+		}
+		!$scope.$$phase&&$scope.$digest();
+	}
+	
+	window.setTimeout($scope.initSubTableData,1000);
+	
+	if(window.ngReady){
+		window.setTimeout(ngReady,10,$scope);
+	}
+	$scope.loadForm();
+}]);
+
+</script>
+</head>
+	<body ng-controller="previewDesignCtrl"  class="b-gray pbd page" style="overflow: hidden">
+         <!-- 工具栏 -->
+         <nav class="bar bar-tab">
+             <a class="tab-item external disabled" ng-click="showOrHide('pageHtml')">
+                 <span class="icon icon-app"></span>
+                 <span class="tab-label">表单预览</span>
+             </a>
+             <a class="tab-item external disabled" href="javascript:void(0)" ng-click="showOrHide('dataStr')">
+                 <span class="icon icon-settings"></span>
+                 <span class="tab-label">数据预览</span>
+             </a>
+         </nav>
+         <div class="content" style="padding: 0 15px 15px" >
+         	<div ng-show="showItem == 'pageHtml'" >
+         		<div id="formHtml" ht-bind-html="formHtml" style="width: 100%;"></div>
+         	</div>
+         	<div ng-show="showItem == 'dataStr'" class="content-block">
+				<pre id="pre" style="height: 100%; border-top-width: 0;width:auto; display:inline-block !important; display:inline;">{{data | json}}</pre>
+		   </div>
+         </div>
+         
+  		 <textarea id="txtForm" style="display: none;"></textarea>
+	</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html ng-app="dicDialog" xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="keywords" content="" />
+	<meta name="description" content="" />
+
+	<title>数据字典</title>
+	<link rel="stylesheet" type="text/css" href="../../css/light7.min.css" />
+	<link rel="stylesheet" type="text/css" href="../../css/basic.css" />
+	<link rel="stylesheet" type="text/css" href="../../css/htmlMobile.css" />
+	<script src="../../js/importJs.js"></script>
+	<script type="text/javascript">
+        var myApp = angular.module("dicDialog", ['base','mobileDirective','arrayToolService']);
+        myApp.controller("dicDialogCtrl",['$scope','baseService','$sce','ArrayToolService', function($scope,baseService,$sce,ArrayToolService) {
+            $scope.dialog = {}
+            $scope.roleList = [];
+            $scope.selectRoles = [];
+            $scope.requestParams = {
+                dialog_alias_:"roleSelector",
+                _search:false,
+                pageSize:20,
+                page:1
+            }
+            $scope.closeDialog =function(){
+                if($scope.searchText){
+                    $scope.clearSearch();
+                    return;
+                }
+
+                dialogConf.closeDialog();
+            }
+            $scope.initData=function(){
+            	$scope.roleList = dialogConf.dataDictList;
+                $scope.total = dialogConf.dataDictList.length;
+                $scope.isAllRoleSelect = false;
+                
+                $scope.roleList.map(function(role){
+                    role.isSelect = false;
+                    role.jsStyle="Cdata_redu";
+                    if(role.children.length>0){
+                        role.jsStyle="Cdata_add";
+                    }
+                    showall(role);
+                })
+            }
+            //初始化
+
+            $scope.findIndex = function(arr,object){
+                for (var i = 0;  arr.length>i; i++) {
+                    var thisData =arr[i];
+                    var curentOneIsSame =true;
+                    for(var key in object){
+                        if("$$hashKey,isSelect".indexOf(key)!= -1)continue;//排除掉一些常用变量
+                        if(thisData[key] && object[key] && thisData[key] != object[key]){
+                            curentOneIsSame = false;
+                            break;
+                        }
+                    }
+                    if(curentOneIsSame) return i;
+                }
+                return -1;
+            }
+            $scope.selectRole = function(role){
+                $scope.roleList.map(function(role){
+                    role.isSelect = false;
+                    if(role.isSelect){
+                        $scope.selectRoles=[];
+                        $scope.selectRoles.push(role);
+                    }
+                })
+                role.isSelect = !role.isSelect
+                if(!$scope.isSingle){
+                    if(role.isSelect){
+                        $scope.selectRoles=[];
+                        $scope.selectRoles.push(role);
+                    }
+                }else{
+                    if(role.isSelect){
+                        $scope.selectRoles.push(role);
+                    }
+                }
+            }
+
+
+            $scope.completeSelect = function(){
+                var returnJson = [];
+                for(var i=0,d;d=$scope.selectRoles[i++];){
+                    var tempData={};
+                    tempData["id"]=d.key;
+                    tempData["name"]=d.name;
+                    tempData["parentId"]=d.parentId;
+                    returnJson.push(tempData);
+                }
+                dialogConf.closeDialog();
+                dialogConf.callBack(returnJson);
+            }
+
+            $scope.initData();
+        }]);
+        myApp.directive('treeView', function(){
+            return {
+                restrict: 'E',
+                priority:-1,
+                templateUrl: 'treeView.html',
+                scope: {
+                    treeData: '='
+                }, controller: function($scope){
+					
+                    $scope.isLeaf = function(item){
+                        return !item.children || !item.children.length;
+                    };
+                    $scope.toggleExpandStatus = function(item){
+                        item.isExpand = !item.isExpand;
+                        var style="Cdata_redu";
+                        if(!item.isExpand && item.children.length!=0){
+                            style="Cdata_add";
+                        }
+                        item.jsStyle=style;
+                    };
+                    $scope.selectRole = function(role){
+                        $scope.$parent.roleList.map(function(item){
+                            init(item);
+                        })
+                        role.isSelect = !role.isSelect
+                        $scope.$parent.selectRoles=[];
+                        if(!$scope.isSingle){
+                            if(role.isSelect){
+                                $scope.$parent.selectRoles.push(role);
+                            }
+                        }else{
+                            if(role.isSelect){
+                                $scope.$parent.selectRoles.push(role);
+                            }
+                        }
+                    };
+
+                }
+            };
+        });
+
+        function showall(role){
+            if(role.children.length>0){
+                role.jsStyle="Cdata_add";
+                role.children.map(function (item) {
+                    showall(item);
+                })
+            }else{
+                role.jsStyle="Cdata_redu";
+            }
+
+        }
+        function init(role){
+            role.isSelect=false;
+            if(role.children.length>0){
+                role.children.map(function (item) {
+                    init(item);
+                })
+            }
+        }
+
+	</script>
+
+
+
+</head>
+<body ng-controller="dicDialogCtrl">
+
+<div class="pop_box_02">
+	<div class="popHeader">
+		<span class="poptitle">数据字典</span>
+		<span class="poptitle_close" ng-click="closeDialog()"></span>
+	</div>
+	<!-- <div class="popHeader">
+		<span class="title_left"><em class="goback" ng-click="closeDialog()"></em></span>
+		<span class="title">数据字典</span>
+		<span class="title_right"><em class="submit_btn" ng-click="completeSelect()">确定</em></span>
+	</div> -->
+	<div class="Cdata_box">
+		<div>
+			<tree-view tree-data="roleList"></tree-view>
+		</div>
+		<div class="botm_btn" ng-click="completeSelect()"><p class="sure_btn">确定</p></div>
+	</div>
+</div>
+
+
+
+</body>
+<script type="text/ng-template" id="treeView.html">
+	<div>
+		<div ng-repeat="role in treeData"  ng-include="'treeItem.html'"></div>
+	</div>
+</script>
+
+<script type="text/ng-template" id="treeItem.html">
+	<div class="Cdata_list clearfix">
+		<p class="Cdata_title {{role.jsStyle}}" ng-click="toggleExpandStatus(role)">{{role.name}}</p><em class="Cdata_select" ng-class="{'selec_in':role.isSelect == true}" ng-click="selectRole(role)"></em>
+	</div>
+	<div ng-if="!isLeaf(role)" ng-show="role.isExpand">
+		<div ng-repeat="role in role.children"  ng-include="'treeItemChild.html'"></div>
+	</div>
+</script>
+
+<script type="text/ng-template" id="treeItemChild.html">
+	<div class="Cdata_child">
+		<div class="Cdata_list clearfix" ><p class="Cdata_cont {{role.jsStyle}}" ng-click="toggleExpandStatus(role)">{{role.name}}</p><em  class="Cdata_select" ng-class="{'selec_in':role.isSelect == true}" ng-click="selectRole(role)"></em></div>
+		<div ng-if="!isLeaf(role)" ng-show="role.isExpand">
+			<div ng-repeat="role in role.children"  ng-include="'treeItemChild.html'"></div>
+		</div>
+	</div>
+</script>
+</html>

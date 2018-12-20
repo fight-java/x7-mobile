@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html  ng-app="childDetail" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
+<title>子表明细</title>
+<script src="../../js/importJs.js"></script>
+
+<script type="text/javascript">
+var FORM_TYPE_ = 'mobile';
+importCss(flowAryCss);
+importJs(flowInstAryJs);
+
+var myApp = angular.module("childDetail", ['base','mobileDirective','flowServiceModule','formDirective']);
+myApp.controller("childDetailCtrl",['$scope','baseService','$sce', function($scope,baseService,$sce) {
+	console.log(dialogConf);
+	$scope.currentPage = 0;
+	$.showPreloader();
+	baseService.postForm(__ctx+"/mobile/bpm/getChildFieldList",{runId:dialogConf.runId,tableName:dialogConf.tableName}).then(function(data){
+		if(data.success){
+			$scope.table = data.table;
+			$scope.data = dialogConf.data;
+			$scope.permission = dialogConf.permission;
+			$scope.fieldList = data.table.children
+			$scope.formHtml = data.html
+			$scope.totalPage = eval("dialogConf.data."+data.table.path).length;
+		}
+		$.hidePreloader();
+	})
+	
+	$scope.changePage = function(n){
+		var p = $scope.currentPage + n;
+		if(p >= 0 && p < $scope.totalPage){
+			$scope.currentPage = p;
+		}
+	}
+	
+	$scope.closeDialog = function(){
+		dialogConf.closeDialog();
+	}
+}]);
+
+</script>
+</head>
+<body ng-controller="childDetailCtrl" class="b-gray pbd page">
+	<div class="taskHeader">
+		<span class="title_left"><em class="goback" ng-click="closeDialog()"></em></span>
+		<span class="title">{{table.desc}}</span>
+		<span class="title_right"></span>
+	</div>
+	<div class="formDetail_box">
+		<!-- <div class="Dtitle_03">子表标题1</div>
+		<div class="mainDetail">
+			<div ng-repeat = "field in fieldList" class="detail_list clearfix">
+				<span class="detail_list_tit">姓名</span>
+				<div class="detail_list_cont">小娟</div>
+			</div>
+			<div class="botbg"></div>
+		</div> -->
+		<div id="formHtml" ht-bind-html="formHtml" style="width: 100%;"></div>
+		<div class="botbg"></div>
+	</div>
+	<div class="page_btn">
+		<button class="page_pre" ng-click="changePage(-1)"></button>
+		<span class="page_num">{{currentPage+1}}/{{totalPage}}</span>
+		<button class="page_next" ng-click="changePage(1)"></button>
+	</div>
+	
+
+</body>
+</html>

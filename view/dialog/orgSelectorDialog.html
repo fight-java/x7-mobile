@@ -1,0 +1,259 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html ng-app="orgDialog" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
+<title>选择组织</title>
+<script src="../../js/importJs.js"></script>
+<script type="text/javascript">
+
+	var myApp = angular.module("orgDialog", ['base','mobileDirective','arrayToolService']);
+	myApp.controller("orgDialogCtrl",['$scope','baseService','$sce','ArrayToolService', function($scope,baseService,$sce,ArrayToolService) {
+ 		
+   		$scope.isSingle = dialogConf.isSingle ? dialogConf.isSingle : false;
+	   	
+	   	$scope.dialog = {}
+	   	
+		$scope.orgList = [];
+	   	
+	   	$scope.selectOrgs = [];
+	   	
+	   	$scope.parentItems = [];
+	   	
+	   	$scope.isShowSelectDetail = false;
+	   	
+	   	$scope.initData=function(){
+	   		$.showIndicator();
+	    	var url = __ctx+"/form/customDialog/getByAlias?alias="+dialogConf.alias;
+	    	baseService.postForm(url,{}).then(function(data){
+	    		$scope.dialog = data;
+	    		$scope.displayfield = JSON.parse(data.displayfield);
+	    		$scope.loadOrg();
+            	$.hideIndicator();
+			},function(){
+				$.hideIndicator();
+			}); 
+	   	}
+	   	
+	   	$scope.loadOrg=function(org){
+	   		$scope.isAllOrgSelect = false;
+	   		var requestParams = JSON.parse($scope.dialog.displayfield);
+	   		if(org){
+	   			requestParams[requestParams.id] = org[requestParams.id]
+	   			requestParams[requestParams.pid] = org[requestParams.pid]
+	   		}
+	   		$.showIndicator();
+	    	var url = __ctx+"/form/customDialog/getTreeData?dialog_alias_="+dialogConf.alias;
+	    	baseService.postForm(url,requestParams).then(function(data){
+	    		$scope.orgList = data;
+	    		$scope.orgList.map(function(org){
+	    			var index = $scope.findIndex($scope.selectOrgs,org);
+	    			if(index != -1){
+	    				org.isSelect = true;
+	    			}
+	    		})
+            	$.hideIndicator();
+			},function(){
+				$.hideIndicator();
+			}); 
+	   	}
+	   	
+	   	$scope.bottomToLoadMore=function(){
+	   		console.log('bottomToLoadMore');
+	   	}
+	   	
+	   	$scope.closeDialog =function(){
+	    	if($scope.searchText){
+	    		$scope.clearSearch();
+	    		return;
+	    	}
+	    	
+	    	dialogConf.closeDialog();
+		}
+	   	
+	   	$scope.clearSearch = function(){
+	    	$scope.searchText = "";
+	    	$scope.changeSearch();
+	    }
+	   	
+	   	/* $scope.changeSearch = function(){
+	   		$scope.isAllOrgSelect = false;
+	   		var requestParams = $scope.displayfield
+	   		delete requestParams['pvalue'];
+	   		$.showIndicator();
+	    	var url = __ctx+"/form/customDialog/getTreeData?dialog_alias_=orgSelector";
+	    	baseService.postForm(url,requestParams).then(function(data){
+            	$.hideIndicator();
+			},function(){
+				$.hideIndicator();
+			}); 
+	    } */
+	   	
+	   	$scope.selectAllOrg = function(){
+	   		$scope.isAllOrgSelect = !$scope.isAllOrgSelect;
+	   		$scope.orgList.map(function(org){
+	   			org.isSelect = $scope.isAllOrgSelect;
+	   			$scope.toggleSelectOrgs(org);
+	   		})
+	   	}
+	   	
+	   	$scope.selectOrg = function(org){
+	   		org.isSelect = !org.isSelect;
+	   		if(!$scope.isSingle){
+		   		$scope.toggleSelectOrgs(org);
+	   		}else{
+	   			if(org.isSelect){
+	   				if($scope.selectOrgs.length > 0){
+	   					var index = $scope.findIndex($scope.orgList,$scope.selectOrgs[0]);
+	   					if(index != -1){
+	   						$scope.orgList[index].isSelect = false;
+	   					}
+	   					$scope.selectOrgs.pop();
+	   				}
+	   				$scope.selectOrgs.push(org);
+	   			}
+	   		}
+	   	}
+	   	
+	   	$scope.toggleSelectOrgs = function(org){
+	   		var index = $scope.findIndex($scope.selectOrgs,org);
+	   		if(index == -1){
+	   			if(org.isSelect){
+	   				$scope.selectOrgs.push(org);
+	   			}
+	   		}else{
+	   			if(!org.isSelect){
+	   				ArrayToolService.del(index,$scope.selectOrgs);
+	   			}
+	   		}
+	   	}
+	   	
+	   	$scope.findIndex = function(arr,object){
+	   		for (var i = 0; i < arr.length; i++) {
+				var thisData =arr[i];
+				var curentOneIsSame =true;
+				for(var key in object){
+					if("$$hashKey,isSelect,isCurrentParent".indexOf(key)!= -1)continue;//排除掉一些常用变量
+					if(thisData[key] && object[key] && thisData[key] != object[key]){
+						curentOneIsSame = false; 
+						break;
+					}
+				}
+				if(curentOneIsSame) return i;
+			}
+			return -1;
+	   	}
+	   	
+	   	
+	   	$scope.changeCurrentParrent = function(item){
+	    	$scope.parentItems.map(function(i){
+	    		if(i[$scope.displayfield.id] == item[$scope.displayfield.id]){
+	    			i.isCurrentParent = true;
+	    		}else{
+	    			i.isCurrentParent = false;
+	    		}
+	    	})
+	    }
+	    
+	    $scope.parentItemClick = function(item){
+	    	if(item){
+	    		try{
+	    			var arr = [].concat($scope.parentItems);
+		    		for(var i = arr.length-1 ; i >= 0 ; i--){
+		    			if(item[$scope.displayfield.id] == arr[i][$scope.displayfield.id]){
+			    			$scope.changeCurrentParrent(arr[i])
+			    			break
+			    		}else{
+			    			$scope.parentItems.splice(i, 1);
+			    		}
+			    	}
+	    		}catch(e){
+	    			alert(e)
+	    		}
+	    	}else{
+	    		$scope.parentItems = [];
+	    	}
+	    	$scope.loadOrg(item);
+	    }
+	   	
+	   	$scope.loadLowerOrg = function(org){
+	   		$scope.parentItems.push(org)
+	   		$scope.changeCurrentParrent(org)
+	   		$scope.loadOrg(org);
+	   	}
+	   	
+	   	$scope.showSelectDetail = function(){
+	    	$scope.isShowSelectDetail = true;
+	    }
+	    
+	    $scope.closeShowSelectDetail = function(){
+	    	$scope.isShowSelectDetail = false;
+	    }
+	    
+	    $scope.removeOrg = function(org){
+	    	var index = $scope.findIndex($scope.selectOrgs,org);
+	    	if(index != -1){
+	    		org.isSelect = false;
+	    		ArrayToolService.del(index,$scope.selectOrgs);
+	    		$scope.isAllOrgSelect = false;
+	    	}
+	    }
+	    
+	    $scope.completeSelect = function(){
+	    	var returnJson = [];
+	    	var resultfield = JSON.parse($scope.dialog.resultfield)
+	    	for(var i=0,d;d=$scope.selectOrgs[i++];){
+    			var tempData={};
+    			for (var j = 0,field;field=resultfield[j++];){
+    				tempData[field.comment]=d[field.field];
+    			}
+    			returnJson.push(tempData);
+    		}
+	    	dialogConf.closeDialog();
+    		dialogConf.callBack(returnJson);
+	    }
+	   	$scope.initData();
+	}]);
+</script>
+</head>
+<body ng-controller="orgDialogCtrl">
+
+	<div class="pop_box_01 page " when-scrolled="bottomToLoadMore()">
+		<div class="popHeader">
+			<span class="poptitle">组织选择</span>
+			<span class="poptitle_close" ng-click="closeDialog()"></span>
+		</div>
+		<div class="taskSearch">
+<!-- 		<div class="taskSearchIn"><input ng-model="searchText" ng-change="changeSearch()" class="taskSearchIpt" type="text" autofocus="autofocus" placeholder="搜索" /><em ng-click="clearSearch()" class="clearSearch"></em></div>
+ -->		
+		</div> 
+		<div class="organ_page_position"><a href="##" ng-click="parentItemClick()" class="position_link">所有组织</a><a ng-repeat="item in parentItems" ng-click="parentItemClick(item)" ng-class="{'current':item.isCurrentParent == true}"  class="position_link"> 》{{item[displayfield.displayName]}}</a></div>
+		<div class="selector_box">
+			<div class="selec_all" ng-class="{'selec_in':isAllOrgSelect == true}" ng-click="selectAllOrg()" ng-if="isSingle == false">全选</div>
+			<ul>
+				<li class="selector_list clearfix" ng-repeat="org in orgList">
+					<div class="multi_superior" ng-class="{'selec_in':org.isSelect == true}" ng-click="selectOrg(org)">{{org[displayfield.displayName]}}</div>
+					<div class="selector_child"><a href="##" ng-if="org.isParent == 'true'" class="selector_child_w" ng-click="loadLowerOrg(org)">下级</a></div>
+				</li>
+			</ul>
+		</div>
+		<div ng-if="isSingle == true" class="selector_have"><a href="##" class="selector_have_num">已选择：{{selectOrgs[0][displayfield.displayName]}}</a><span ng-click="completeSelect()" class="selector_have_btn">确定</span></div>
+		<div ng-if="isSingle == false" class="selector_have"><a ng-click="showSelectDetail()" href="##" class="selector_have_num">已选择：{{selectOrgs.length}}个组织</a><span ng-click="completeSelect()" class="selector_have_btn">确定</span></div>
+	</div>
+	
+	<div ng-if="isShowSelectDetail == true"  class="pop_box_01">
+		<div class="popHeader">
+			<span class="poptitle">已选{{selectOrgs.length}}个</span>
+			<span class="poptitle_close" ng-click="closeShowSelectDetail()"></span>
+		</div>
+		<div class="selector_box">
+			<div class="selected_Blist clearfix" ng-repeat="org in selectOrgs">
+				<div class="selected_Bname02">{{org[displayfield.displayName]}}</div>
+				<em class="selected_Bcancel02" ng-click="removeOrg(org)"></em>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

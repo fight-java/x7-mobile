@@ -1,0 +1,701 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html ng-app="userDialog" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
+<title>选择用户</title>
+<script src="../../js/importJs.js"></script>
+
+<script type="text/javascript">
+
+	var myApp = angular.module("userDialog", ['base','mobileDirective','arrayToolService']);
+	myApp.controller("userDialogCtrl",['$scope','baseService','$sce','ArrayToolService', function($scope,baseService,$sce,ArrayToolService) {
+	   	
+   		$scope.isSingle = dialogConf.isSingle ? dialogConf.isSingle : false;
+	   	//$scope.isSingle = true;
+	   	
+		$scope.selectUsers = [];
+		
+		$scope.selectOrgs = [];
+		
+		$scope.selectPosts = [];
+		
+		$scope.selectRoles = [];
+		
+		$scope.parentItems = [];
+		
+		$scope.selectUserLength = 0;
+		
+		$scope.showSelectDetail = false
+		
+		$scope.selectType = 'org';
+		
+		$scope.loadOrg = function(item) {
+			var url = __ctx+"/mobile/user/getUserSelectorOrgTree";
+			var requestParams = {};
+			$scope.isAllOrgSelect = false;
+			if(item){
+				requestParams = {
+					demId:item.demId,
+					pId:item.id
+				}
+			}
+			$.showIndicator();
+            baseService.postForm(url,requestParams).then(function(data){
+            	if(data.success){
+            		$scope.orgList = data.orgList;
+            		$scope.userList = data.userList;
+            		$scope.checkSelect();
+            	}else{
+            		$scope.orgList = [];
+            	}
+            	$.hideIndicator();
+			},function(){
+				$.hideIndicator();
+			});
+	    };
+	    
+	    $scope.closeDialog =function(){
+	    	if($scope.searchText){
+	    		$scope.clearSearch();
+	    		return;
+	    	}
+	    	
+	    	dialogConf.closeDialog();
+		}
+	    
+	    $scope.selectTypeChange =function(type){
+	    	$scope.selectType = type;
+	    }
+	    
+	    $scope.lowerItemClick=function(item){
+	    	$scope.loadOrg(item);  
+	    	$scope.parentItems.push(item)
+	    	$scope.changeCurrentParrent(item);
+	    }
+	    
+	    $scope.changeCurrentParrent = function(item){
+	    	$scope.parentItems.map(function(i){
+	    		if(i.id == item.id){
+	    			i.isCurrentParent = true;
+	    		}else{
+	    			i.isCurrentParent = false;
+	    		}
+	    	})
+	    }
+	    
+	    $scope.parentItemClick = function(item){
+	    	if(item){
+	    		try{
+	    			var arr = [].concat($scope.parentItems);
+		    		for(var i = arr.length-1 ; i >= 0 ; i--){
+		    			if(item.id == arr[i].id){
+			    			$scope.changeCurrentParrent(arr[i])
+			    			break
+			    		}else{
+			    			$scope.parentItems.splice(i, 1);
+			    		}
+			    	}
+	    		}catch(e){
+	    			alert(e)
+	    		}
+	    	}else{
+	    		$scope.parentItems = [];
+	    	}
+	    	$scope.loadOrg(item);
+	    }
+	    
+	    $scope.checkSelect = function(){
+	    	$scope.userList.map(function(user){
+	    		if(ArrayToolService.idxOfById(user,$scope.selectUsers,'id') == -1){
+	    			user.isSelect = false
+	    		}else{
+	    			user.isSelect = true
+	    		}
+	    	});
+	    	$scope.postUserList.map(function(user){
+	    		if(ArrayToolService.idxOfById(user,$scope.selectUsers,'id') == -1){
+	    			user.isSelect = false
+	    		}else{
+	    			user.isSelect = true
+	    		}
+	    	});
+	    	$scope.roleUserList.map(function(user){
+	    		if(ArrayToolService.idxOfById(user,$scope.selectUsers,'id') == -1){
+	    			user.isSelect = false
+	    		}else{
+	    			user.isSelect = true
+	    		}
+	    	});
+	    	
+	    	$scope.searchUserList.map(function(user){
+	    		if(ArrayToolService.idxOfById(user,$scope.selectUsers,'id') == -1){
+	    			user.isSelect = false
+	    		}else{
+	    			user.isSelect = true
+	    		}
+	    	});
+	    	
+	    	/* $scope.orgList.map(function(org){
+	    		$scope.selectOrgs.map(function(selectOrg){
+	    			if(org.id == selectOrg.id){
+	    				org.isSelect = true
+	    			}
+	    		})
+	    	}); */
+	    }
+	    
+	    $scope.selectAllOrg = function(){
+	    	$scope.isAllOrgSelect = !$scope.isAllOrgSelect;
+	    	if($scope.isAllOrgSelect){
+	    		$scope.orgList.map(function(item){
+		    		item.isSelect =  true;
+		    		if(ArrayToolService.idxOfById(item,$scope.selectOrgs,'id') == -1){
+		    			$scope.selectOrgs.push(item);
+		    		}
+		    	});
+	    		$scope.userList.map(function(item){
+		    		item.isSelect =  true;
+		    		if(ArrayToolService.idxOfById(item,$scope.selectUsers,'id') == -1){
+		    			$scope.selectUsers.push(item);
+		    		}
+		    	});
+	    	}else{
+	    		$scope.orgList.map(function(item){
+		    		item.isSelect =  false;
+		    		ArrayToolService.removeById(item,$scope.selectOrgs,'id')
+		    	});
+	    		$scope.userList.map(function(item){
+		    		item.isSelect =  false;
+		    		ArrayToolService.removeById(item,$scope.selectUsers,'id')
+		    	});
+	    	}
+	    	$scope.renderUserLength();
+	    }
+	    
+	    $scope.selectUser = function(user){
+	    	if($scope.isSingle){
+	    		$scope.selectUsers = [];
+	    		if(!user.isSelect){
+	    			$scope.selectUsers.push(user);
+	    		}
+	    	}else{
+	    		var index = ArrayToolService.idxOfById(user,$scope.selectUsers,'id');
+		    	if( index == -1){
+		    		$scope.selectUsers.push(user)
+		    	}else{
+		    		ArrayToolService.del(index,$scope.selectUsers);
+		    	}
+	    	}
+	    	$scope.renderUserLength();
+	    }
+	    
+	    $scope.selectOrg=function(item){
+	    	if(item.isSelect){
+	    		item.isSelect = false;
+	    		var index = ArrayToolService.idxOfById(item,$scope.selectOrgs,'id');
+	    		ArrayToolService.del(index,$scope.selectOrgs);
+	    	}else{
+	    		$scope.selectOrgs.push(item)
+	    		item.isSelect = true;
+	    	}
+	    	$scope.renderUserLength();
+	    }
+	    
+	    $scope.renderUserLength=function(){
+	    	$scope.selectUserLength = $scope.selectUsers.length;
+	    	/* $scope.selectOrgs.map(function(item){
+	    		$scope.selectUserLength += item.population;
+	    	})
+	    	$scope.selectPosts.map(function(item){
+	    		$scope.selectUserLength += item.population;
+	    	}) */
+	    	$scope.checkSelect();
+	    }
+	    
+	    //加载岗位
+	    $scope.postPageResult = {}
+	    $scope.postList = [];
+	    $scope.loadPost=function(){
+	    	var requestParams = {rows:20};
+	    	if($scope.postPageResult.hasNextPage){
+	    		requestParams.page = $scope.postPageResult.nextPage;
+	    	}else if($scope.postPageResult.hasNextPage == false){
+	    		return ;
+	    	}
+	    	var url = __ctx+"/mobile/user/getPostList";
+	    	$.showIndicator();
+	    	baseService.postForm(url,requestParams).then(function(data){
+            	if(data.success){
+            		$scope.postPageResult = data.postPageResult.pageResult;
+            		$scope.postList = $scope.postList.concat(data.postPageResult.rows);
+            	}
+            	$.hideIndicator();
+			},function(){
+				$.hideIndicator();
+			});
+	    }
+	    
+	    
+	    $scope.selectPost = function(post){
+	    	post.isSelect = !post.isSelect;
+	    	$scope.checkPost(post.isSelect,post);
+	    	$scope.renderUserLength();
+	    }
+	    
+	    $scope.selectAllPost = function(){
+	    	$scope.isAllPostSelect = !$scope.isAllPostSelect;
+	    	$scope.postList.map(function(post){
+	    		post.isSelect = $scope.isAllPostSelect;
+	    		$scope.checkPost(post.isSelect,post);
+	    	})
+	    	$scope.renderUserLength();
+	    }
+	    
+	    $scope.checkPost = function(isSelect,post){
+	    	var index = ArrayToolService.idxOfById(post,$scope.selectPosts,'id');
+	    	if(isSelect && index == -1){
+	    		$scope.selectPosts.push(post)
+	    	}else if(!isSelect){
+	    		ArrayToolService.del(index,$scope.selectPosts);
+	    	}
+	    }
+	    
+	    //加载岗位用户
+	    $scope.postUserPageResult = {};
+   	    $scope.postUserList = [];
+	    $scope.loadPostUser = function(post){
+	    	$scope.isShowPostUser = true;
+	    	var requestParams = {
+    			rows:20,
+    			orgId:post.orgId,
+    			relId:post.id
+   			};
+	    	if($scope.postUserPageResult.hasNextPage){
+	    		requestParams.page = $scope.postUserPageResult.nextPage;
+	    	}else if($scope.postUserPageResult.hasNextPage == false){
+	    		return ;
+	    	}else{
+	    		requestParams.page = 1
+	    	}
+	    	$.showIndicator();
+	    	var url = __ctx+"/org/user/getUserByGroupJson";
+	    	baseService.postForm(url,requestParams).then(function(data){
+	    		$scope.showPostUser = post;
+            	$scope.postUserPageResult = data.pageResult;
+            	data.rows.map(function(user){
+            		$scope.postUserList.push({id:user.userId,userName:user.fullName,isCharge:user.isCharge,account:user.account})
+            	})
+            	$scope.checkSelect();
+            	$.hideIndicator();
+			},function(){
+				$.hideIndicator();
+			});
+	    }
+	    
+	    $scope.selectAllPostUser = function(){
+	    	$scope.isSelectAllPostUser = !$scope.isSelectAllPostUser;
+	    	$scope.postUserList.map(function(user){
+	    		var index = ArrayToolService.idxOfById(user,$scope.selectUsers,'id');
+	    		if($scope.isSelectAllPostUser && index == -1){
+		    		$scope.selectUsers.push(user)
+		    	}else if(!$scope.isSelectAllPostUser){
+		    		ArrayToolService.del(index,$scope.selectUsers);
+		    	}
+	    	})
+	    	$scope.renderUserLength();
+	    }
+	    
+	    $scope.closeShowPostUser = function(){
+	    	$scope.isShowPostUser = false;
+	    	$scope.showPostUser = '';
+	    	$scope.postUserPageResult = {};
+		    $scope.postUserList = [];
+	    }
+	   	
+	    //加载角色
+	    $scope.rolePageResult = {}
+    	$scope.roleList = [];
+	    $scope.loadRole=function(){
+	    	var requestParams = {rows:20};
+	    	if($scope.rolePageResult.hasNextPage){
+	    		requestParams.page = $scope.rolePageResult.nextPage;
+	    	}else if($scope.rolePageResult.hasNextPage == false){
+	    		return ;
+	    	}else{
+	    		requestParams.page = 1
+	    	}
+	    	var url = __ctx+"/mobile/user/getRoleList";
+	    	$.showIndicator();
+	    	baseService.postForm(url,requestParams).then(function(data){
+            	if(data.success){
+            		$scope.rolePageResult = data.rolePageResult.pageResult;
+            		$scope.roleList = $scope.roleList.concat(data.rolePageResult.rows);
+            	}
+            	$.hideIndicator();
+			},function(){
+				$.hideIndicator();
+			});
+	    }
+	    
+	    $scope.selectRole = function(role){
+	    	role.isSelect = !role.isSelect;
+	    	$scope.checkRole(role.isSelect,role);
+	    	$scope.renderUserLength();
+	    }
+	    
+	    $scope.selectAllRole = function(){
+	    	$scope.isAllRoleSelect = !$scope.isAllRoleSelect;
+	    	$scope.roleList.map(function(role){
+	    		role.isSelect = $scope.isAllRoleSelect;
+	    		$scope.checkRole(role.isSelect,role);
+	    	})
+	    	$scope.renderUserLength();
+	    }
+	    
+	    $scope.checkRole = function(isSelect,role){
+	    	var index = ArrayToolService.idxOfById(role,$scope.selectRoles,'id');
+	    	if(isSelect && index == -1){
+	    		$scope.selectRoles.push(role)
+	    	}else if(!isSelect){
+	    		ArrayToolService.del(index,$scope.selectRoles);
+	    	}
+	    }
+	    
+	    //加载角色用户
+	    $scope.roleUserPageResult = {};
+   	    $scope.roleUserList = [];
+	    $scope.loadRoleUser = function(role){
+	    	$scope.isShowRoleUser = true;
+	    	var requestParams = {
+    			rows:20,
+    			roleId:role.id
+   			};
+	    	if($scope.roleUserPageResult.hasNextPage){
+	    		requestParams.page = $scope.roleUserPageResult.nextPage;
+	    	}else if($scope.roleUserPageResult.hasNextPage == false){
+	    		return ;
+	    	}else{
+	    		requestParams.page = 1
+	    	}
+	    	$.showIndicator();
+	    	var url = __ctx+"/org/userRole/listJson";
+	    	baseService.postForm(url,requestParams).then(function(data){
+	    		$scope.showRoleUser = role;
+            	$scope.roleUserPageResult = data.pageResult;
+            	data.rows.map(function(user){
+            		$scope.roleUserList.push({id:user.userId,userName:user.fullname,account:user.account})
+            	})
+            	$scope.checkSelect();
+            	$.hideIndicator();
+			},function(){
+				$.hideIndicator();
+			});
+	    }
+	    
+	    $scope.closeShowRoleUser=function (){
+	    	$scope.isShowRoleUser = false;
+	    	$scope.showRoleUser = '';
+	    	$scope.roleUserPageResult = {};
+		    $scope.roleUserList = [];
+	    }
+	    
+	    $scope.selectAllRoleUser = function(){
+	    	$scope.isSelectAllRoleUser = !$scope.isSelectAllRoleUser;
+	    	$scope.roleUserList.map(function(user){
+	    		var index = ArrayToolService.idxOfById(user,$scope.selectUsers,'id');
+		    	if($scope.isSelectAllRoleUser && index == -1){
+		    		$scope.selectUsers.push(user)
+		    	}else if(!$scope.isSelectAllRoleUser){
+		    		ArrayToolService.del(index,$scope.selectUsers);
+		    	}
+	    	})
+	    	$scope.renderUserLength();
+	    }
+	    
+	    $scope.bottomToLoadMore = function(){
+	    	if($scope.selectType == 'post'){
+	    		if($scope.showPostUser){
+	    			$scope.loadPostUser($scope.showPostUser);
+	    		}else{
+	    			$scope.loadPost();
+	    		}
+	    	}
+	    	if($scope.selectType == 'role'){
+	    		if($scope.showRoleUser){
+	    			$scope.loadRoleUser($scope.showRoleUser);
+	    		}else{
+	    			$scope.loadRole();
+	    		}
+	    	}
+	    }
+	    
+	    $scope.searchUserPageResult = {};
+   	    $scope.searchUserList = [];
+   	    
+	    $scope.changeSearch = function(){
+	    	$scope.isSelectAllSearchUser = false;
+	    	if(!$scope.searchText){
+	    		$scope.searchUserPageResult = {};
+	       	    $scope.searchUserList = [];
+	       	    return;
+	    	}
+	    	var requestParams = {
+    			rows:20,
+    			searchText:$scope.searchText
+   			};
+	    	$.showIndicator();
+	    	var url = __ctx+"/mobile/user/getSearchUser";
+	    	baseService.postForm(url,requestParams).then(function(data){
+            	$scope.searchUserPageResult = data.userPageResult.pageResult;
+            	data.userPageResult.rows.map(function(user){
+            		$scope.searchUserList.push({id:user.userId,userName:user.fullName,orgName:user.orgName,isCharge:user.isCharge})
+            	})
+            	$scope.checkSelect();
+            	$.hideIndicator();
+			},function(){
+				$.hideIndicator();
+			});
+	    }
+	    
+	    $scope.selectAllSearchUser = function(){
+	    	$scope.isSelectAllSearchUser = !$scope.isSelectAllSearchUser;
+	    	$scope.searchUserList.map(function(user){
+	    		var index = ArrayToolService.idxOfById(user,$scope.selectUsers,'id');
+		    	if($scope.isSelectAllSearchUser && index == -1){
+		    		$scope.selectUsers.push(user)
+		    	}else if(!$scope.isSelectAllSearchUser){
+		    		ArrayToolService.del(index,$scope.selectUsers);
+		    	}
+	    	})
+	    	$scope.renderUserLength();
+	    }
+	    
+	    $scope.clearSearch = function(){
+	    	$scope.searchText = "";
+	    	$scope.changeSearch();
+	    }
+	    
+	    $scope.showSelectDetail = function(){
+	    	$scope.isShowSelectDetail = true;
+	    }
+	    
+	    $scope.closeShowSelectDetail = function(){
+	    	$scope.isShowSelectDetail = false;
+	    }
+	    
+	    $scope.removeOrg = function(index,org){
+	    	$scope.isAllOrgSelect = false;
+	    	ArrayToolService.del(index,$scope.selectOrgs);
+	    	var i = ArrayToolService.idxOfById(org,$scope.orgList,'id')
+	    	$scope.orgList[i].isSelect = false;
+	    	$scope.renderUserLength()
+	    }
+	    
+	    $scope.removePost = function(index,post){
+	    	$scope.isAllPostSelect = false;
+	    	ArrayToolService.del(index,$scope.selectPosts);
+	    	var i = ArrayToolService.idxOfById(post,$scope.postList,'id')
+	    	$scope.postList[i].isSelect = false;
+	    	$scope.renderUserLength()
+	    }
+	    
+	    $scope.removeRole = function(index,role){
+	    	$scope.isAllRoleSelect = false;
+	    	ArrayToolService.del(index,$scope.selectRoles);
+	    	var i = ArrayToolService.idxOfById(role,$scope.roleList,'id')
+	    	$scope.roleList[i].isSelect = false;
+	    	$scope.renderUserLength()
+	    }
+	    
+	    $scope.removeUser = function(index,user){
+	    	ArrayToolService.del(index,$scope.selectUsers);
+	    	$scope.renderUserLength()
+	    }
+	    
+	    $scope.completeSelect = function(){
+	    	if($scope.selectUsers.length == 0 && $scope.selectOrgs.length == 0 && $scope.selectPosts.length == 0 && $scope.selectRoles.length == 0 ){
+	    		return ;
+	    	}
+	    	$.showIndicator();
+	    	var requestParams = {
+	    		isSingle:$scope.isSingle,
+	    		alias:dialogConf.alias
+	    	};
+	    	requestParams.selectUsers = JSON.stringify($scope.selectUsers)
+	    	if(!dialogConf.isSingle){
+	    		if($scope.selectOrgs.length > 0){
+	    			requestParams.selectOrgs = JSON.stringify($scope.selectOrgs);
+	    		}
+	    		if($scope.selectPosts.length > 0){
+	    			requestParams.selectPosts = JSON.stringify($scope.selectPosts);
+	    		}
+	    		if($scope.selectRoles.length > 0){
+	    			requestParams.selectRoles = JSON.stringify($scope.selectRoles);
+	    		}
+	    	}
+	    	var url = __ctx+"/mobile/user/completeUserSelector";
+	    	baseService.postForm(url,requestParams).then(function(data){
+	    		var returnJson = [];
+	    		for(var i=0,d;d=data.userList[i++];){
+	    			var tempData={};
+	    			for (var j = 0,field;field=data.resultfield[j++];){
+	    				tempData[field.comment]=d[field.field];
+	    			}
+	    			returnJson.push(tempData);
+	    		}
+	    		$.hideIndicator();
+	    		dialogConf.closeDialog();
+	    		dialogConf.callBack(returnJson);
+			},function(){
+				$.hideIndicator();
+			});
+	    }
+	    
+	    $scope.loadOrg();
+	    $scope.loadPost();
+	    $scope.loadRole();
+	}]);
+</script>
+<style>
+.task_tabCell{
+	width: 33.3%
+}
+</style>
+</head>
+<body ng-controller="userDialogCtrl">
+	<div class="pop_box_01 page " when-scrolled="bottomToLoadMore()" >
+		<div class="popHeader">
+			<span class="poptitle">用户选择</span>
+			<span class="poptitle_close" ng-click="closeDialog()"></span>
+		</div>
+		<div class="taskSearch">
+			<div class="taskSearchIn"><input class="taskSearchIpt" type="text" ng-change="changeSearch()" ng-model="searchText" placeholder="搜索" /><em ng-if="searchText" ng-click="clearSearch()" class="clearSearch"></em></div>
+		</div>
+		<div ng-if="!searchText">
+			<div class="task_changeTab clearfix">
+				<a href="#" class="task_tabCell" ng-class="{'current':selectType == 'org'}" ng-click="selectTypeChange('org')">组织</a>
+				<a href="#" class="task_tabCell" ng-class="{'current':selectType == 'post'}" ng-click="selectTypeChange('post')">岗位</a>
+				<a href="#" class="task_tabCell" ng-class="{'current':selectType == 'role'}" ng-click="selectTypeChange('role')">角色</a>
+			</div>
+			<div ng-if="selectType == 'org'">
+				<div class="page_position"><a ng-click="parentItemClick()"  class="position_link">所有组织</a> <a ng-repeat="item in parentItems" ng-click="parentItemClick(item)" ng-class="{'current':item.isCurrentParent == true}"  class="position_link"> 》{{item.name}}</a></div>
+				<div class="selector_box">
+					<div class="selec_all" ng-class="{'selec_in':isAllOrgSelect == true}" ng-if="isSingle == false" ng-Click="selectAllOrg()">全选</div>
+					<div ng-repeat="item in orgList" class="selector_list clearfix">
+						<div ng-if="isSingle == false" class="multi_superior" ng-class="{'selec_in':item.isSelect == true}" ng-click="selectOrg(item)">{{item.name}}</div>
+						<div ng-if="isSingle == true" class="single_superior">{{item}}</div>
+						<div class="selector_child "><a href="#" ng-if="item.isSelect != true" ng-click="lowerItemClick(item)" class="selector_child_w">下级</a></div>
+					</div>
+					<div ng-repeat="user in userList" class="selector_list clearfix">
+						<div class="single_options" ng-class="{'selec_in':user.isSelect == true}" ng-click="selectUser(user)">
+							<div class="selector_name">{{user.userName}}<span ng-if="user.isCharge == 1" class="selector_charge">负责人</span></div>
+							<p class="selector_account">账号ID：{{user.account}}</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div ng-if="selectType == 'post'">
+				<div class="page_position"><a class="position_link" ng-click="closeShowPostUser()">所有岗位</a><a ng-if="showPostUser.relName" class="position_link current"> 》{{showPostUser.relName}}</a></div>
+				<div class="selector_box" ng-if="!isShowPostUser">
+					<div class="selec_all" ng-Click="selectAllPost()" ng-if="isSingle == false" ng-class="{'selec_in':isAllPostSelect == true}">全选</div>
+					<div ng-repeat="post in postList" class="selector_list clearfix">
+						<div  ng-if="isSingle == false" class="multi_superior" ng-class="{'selec_in':post.isSelect == true}" ng-click="selectPost(post)">
+							{{post.relName}}
+							<p class="selector_account">部门：{{post.orgName}}</p>
+						</div>
+						<div  ng-if="isSingle == true" class="single_superior" >
+							{{post.relName}}
+							<p class="selector_account">部门：{{post.orgName}}</p>
+						</div>
+						<div class="selector_child "><a href="#" ng-if="post.isSelect != true" ng-click="loadPostUser(post)" class="selector_child_w">用户</a></div>
+					</div>
+				</div>
+				
+				<div class="selector_box" ng-if="isShowPostUser">
+					<div class="selec_all" ng-click="selectAllPostUser()" ng-if="isSingle == false" ng-class="{'selec_in':isSelectAllPostUser == true}" >全选</div>
+					<div ng-repeat="user in postUserList" class="selector_list clearfix">
+						<div class="single_options" ng-class="{'selec_in':user.isSelect == true}" ng-click="selectUser(user)">
+							<div class="selector_name">{{user.userName}}<span ng-if="user.isCharge == 1" class="selector_charge">负责人</span></div>
+							<p class="selector_account">账号ID：{{user.account}}</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div ng-if="selectType == 'role'">
+				<div class="page_position"><a class="position_link" ng-click="closeShowRoleUser()">所有角色</a><a ng-if="showRoleUser.name" class="position_link current"> 》{{showRoleUser.name}}</a></div>
+				<div class="selector_box" ng-if="!isShowRoleUser">
+					<div class="selec_all" ng-class="{'selec_in':isAllRoleSelect == true}" ng-if="isSingle == false" ng-Click="selectAllRole()">全选</div>
+					<div ng-repeat="role in roleList" class="selector_list clearfix">
+						<div ng-if="isSingle == false" class="multi_superior" ng-click="selectRole(role)" ng-class="{'selec_in':role.isSelect == true}" >{{role.name}}<span class="people_num">（{{role.description}}人）</span></div>
+						<div ng-if="isSingle == true" class="single_superior" >{{role.name}}<span class="people_num">（{{role.description}}人）</span></div>
+						<div class="selector_child "><a href="#" ng-if="role.isSelect != true" ng-click="loadRoleUser(role)" class="selector_child_w">用户</a></div>
+					</div>
+				</div>
+				
+				<div class="selector_box" ng-if="isShowRoleUser">
+					<div class="selec_all" ng-click="selectAllRoleUser()" ng-if="isSingle == false" ng-class="{'selec_in':isSelectAllRoleUser == true}" >全选</div>
+					<div ng-repeat="user in roleUserList" class="selector_list clearfix">
+						<div class="single_options" ng-class="{'selec_in':user.isSelect == true}" ng-click="selectUser(user)">
+							<div class="selector_name">{{user.userName}}</div>
+							<p class="selector_account">账号ID：{{user.account}}</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div ng-if="searchText">
+			<div class="selector_box">
+				<div class="selec_all" ng-class="{'selec_in':isSelectAllSearchUser == true}" ng-if="isSingle == false" ng-Click="selectAllSearchUser()">全选</div>
+				<div ng-repeat="user in searchUserList" class="selector_list clearfix">
+					<div class="single_options" ng-class="{'selec_in':user.isSelect == true}" ng-click="selectUser(user)">
+						<div class="selector_name">{{user.userName}}<span ng-if="user.isCharge == 1" class="selector_charge">负责人</span></div>
+						<p class="selector_account">部门：{{user.orgName}}</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="selector_have">
+			<a ng-if="isSingle == false" ng-click="showSelectDetail()" href="#" class="selector_have_num">已选择：{{selectUserLength}}用户,{{selectOrgs.length}}部门,{{selectPosts.length}}岗位,{{selectRoles.length}}角色</a>
+			<a ng-if="isSingle == true" href="##" class="selector_have_num">已选择：<span ng-if="selectUsers.length > 0">{{selectUsers[0].userName}}</span></a>
+			<span class="selector_have_btn" ng-click="completeSelect()">确定</span>
+		</div>
+	</div>
+	<div ng-if="isShowSelectDetail == true" class="pop_box_01">
+		<div class="popHeader">
+			<span class="poptitle">已选用户</span>
+			<span class="poptitle_close" ng-click="closeShowSelectDetail()"></span>
+		</div>
+		<div class="selector_box">
+			<div ng-repeat="org in selectOrgs" class="selected_Blist clearfix">
+				<div class="selected_Bcont">
+					<div class="selected_Bname">{{org.name}}</div>
+				</div>
+				<em class="selected_Bcancel" ng-click="removeOrg($index,org)"></em>
+			</div>
+			<div ng-repeat="post in selectPosts" class="selected_Blist clearfix">
+				<div class="selected_Bcont">
+					<div class="selected_Bname">{{post.relName}}</div>
+					<p class="selected_Baccount">部门:{{post.orgName}}</p>
+				</div>
+				<em class="selected_Bcancel" ng-click="removePost($index,post)"></em>
+			</div>
+			<div ng-repeat="role in selectRoles" class="selected_Blist clearfix">
+				<div class="selected_Bcont">
+					<div class="selected_Bname">{{role.name}}</div>
+				</div>
+				<em class="selected_Bcancel" ng-click="removeRole($index,role)"></em>
+			</div>
+			<div ng-repeat="user in selectUsers" class="selected_Blist clearfix">
+				<div class="selected_Bcont">
+					<div class="selected_Bname">{{user.userName}}</div>
+					<p class="selected_Baccount">账号ID:{{user.account}}</p>
+				</div>
+				<em class="selected_Bcancel" ng-click="removeUser($index,user)"></em>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
